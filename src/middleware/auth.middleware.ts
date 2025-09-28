@@ -83,7 +83,10 @@ export const verifierEntreprise = (req: Request, res: Response, next: NextFuncti
     return;
   }
 
-  if (req.utilisateur.entrepriseId !== entrepriseId) {
+  // Convertir en number pour la comparaison
+  const entrepriseIdNumber = parseInt(entrepriseId);
+  
+  if (req.utilisateur.entrepriseId !== entrepriseIdNumber) {
     res.status(403).json({ message: 'Accès refusé - Entreprise non autorisée' });
     return;
   }
