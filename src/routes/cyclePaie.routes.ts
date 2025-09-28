@@ -60,4 +60,16 @@ router.post('/cycles-paie/:id/generer-bulletins',
   (req, res, next) => cyclePaieController.genererBulletins(req, res, next)
 );
 
+// GET /cycles-paie/:id/statistiques - Obtenir les statistiques d'un cycle
+router.get('/cycles-paie/:id/statistiques',
+  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  (req, res, next) => cyclePaieController.obtenirStatistiques(req, res, next)
+);
+
+// PUT /cycles-paie/:id/jours-travailes - Mettre à jour les jours travaillés en lot
+router.put('/cycles-paie/:id/jours-travailes',
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
+  (req, res, next) => cyclePaieController.mettreAJourJoursTravailes(req, res, next)
+);
+
 export default router;

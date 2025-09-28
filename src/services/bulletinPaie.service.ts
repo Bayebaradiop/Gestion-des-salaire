@@ -43,6 +43,11 @@ export class BulletinPaieService {
       throw new Error('Le bulletin ne peut être modifié que lorsque le cycle est en brouillon');
     }
 
+    // Validation stricte des jours travaillés pour les journaliers
+    if (employe.typeContrat === 'JOURNALIER' && donnees.joursTravailes !== undefined) {
+      this.validerJoursTravailes(donnees.joursTravailes, cycle);
+    }
+
     // Recalculer les montants si nécessaire
     let salaireBrut = donnees.salaireBrut ?? bulletin.salaireBrut;
     let deductions = donnees.deductions ?? bulletin.deductions;
@@ -117,5 +122,37 @@ export class BulletinPaieService {
 
   async obtenirAvecDetails(id: number): Promise<any> {
     return await this.bulletinPaieRepository.trouverAvecDetails(id);
+  }
+
+  /**
+   * Valide les jours travaillés selon la période du cycle
+   */
+  private validerJoursTravailes(joursTravailes: number | null, cycle: any): void {
+    if (joursTravailes === null || joursTravailes === undefined) {
+      return; // Valide pour les non-journaliers
+    }
+
+    // Validation des valeurs de base
+    if (joursTravailes < 0) {
+      throw new Error('Le nombre de jours travaillés ne peut pas être négatif');
+    }
+
+    if (joursTravailes > 31) {
+      throw new Error('Le nombre de jours travaillés ne peut pas dépasser 31 jours par période');
+    }
+
+    // Calcul du nombre de jours maximum selon la période du cycle
+    const dateDebut = new Date(cycle.dateDebut);
+    const dateFin = new Date(cycle.dateFin);
+    const joursMaxDansPeriode = Math.ceil((dateFin.getTime() - dateDebut.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+
+    if (joursTravailes > joursMaxDansPeriode) {
+      throw new Error(`Le nombre de jours travaillés (${joursTravailes}) ne peut pas dépasser le nombre de jours dans la période (${joursMaxDansPeriode})`);
+    }
+
+    // Validation pour éviter les erreurs de saisie communes
+    if (joursTravailes > 25 && joursMaxDansPeriode <= 31) {
+      console.warn(`⚠️ Attention: ${joursTravailes} jours travaillés semble élevé pour une période de ${joursMaxDansPeriode} jours`);
+    }
   }
 }

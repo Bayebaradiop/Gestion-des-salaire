@@ -93,4 +93,23 @@ export class CyclePaieController {
       next(error);
     }
   };
+
+  public obtenirStatistiques = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const stats = await this.service.obtenirStatistiques(parseInt(req.params.id));
+      res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public mettreAJourJoursTravailes = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { joursTravailes } = req.body as { joursTravailes: Array<{employeId: number, jours: number}> };
+      const bulletinsMisAJour = await this.service.mettreAJourJoursTravailes(parseInt(req.params.id), joursTravailes);
+      res.json(bulletinsMisAJour);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

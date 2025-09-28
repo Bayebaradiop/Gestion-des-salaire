@@ -164,4 +164,90 @@ export class CyclePaieService {
 
     return bulletins;
   }
+
+  async obtenirStatistiques(id: number): Promise<any> {
+    const cycle = await this.cyclePaieRepository.trouverParId(id);
+    if (!cycle) {
+      throw new Error('Cycle de paie non trouvé');
+    }
+
+    const bulletins = await this.bulletinPaieRepository.listerParCycle(id);
+    
+    const stats = {
+      cycleInfo: {
+        id: cycle.id,
+        titre: cycle.titre,
+        periode: cycle.periode,
+        statut: cycle.statut,
+        dateDebut: cycle.dateDebut,
+        dateFin: cycle.dateFin
+      },
+      bulletins: {
+        total: bulletins.length,
+        enAttente: bulletins.filter(b => b.statut === 'EN_ATTENTE').length,
+        partiel: bulletins.filter(b => b.statut === 'PARTIEL').length,
+        paye: bulletins.filter(b => b.statut === 'PAYE').length
+      },
+      montants: {
+        totalBrut: bulletins.reduce((sum, b) => sum + b.salaireBrut, 0),
+        totalNet: bulletins.reduce((sum, b) => sum + b.salaireNet, 0),
+        totalPaye: bulletins.reduce((sum, b) => sum + b.montantPaye, 0),
+        totalRestant: bulletins.reduce((sum, b) => sum + (b.salaireNet - b.montantPaye), 0)
+      },
+      progression: {
+        pourcentagePaye: bulletins.length > 0 
+          ? Math.round((bulletins.filter(b => b.statut === 'PAYE').length / bulletins.length) * 100)
+          : 0
+      }
+    };
+
+    return stats;
+  }
+
+  async mettreAJourJoursTravailes(cycleId: number, joursTravailes: Array<{employeId: number, jours: number}>): Promise<any[]> {
+    const cycle = await this.cyclePaieRepository.trouverParId(cycleId);
+    if (!cycle) {
+      throw new Error('Cycle de paie non trouvé');
+    }
+
+    if (cycle.statut !== 'BROUILLON') {
+      throw new Error('Les jours travaillés ne peuvent être modifiés que pour un cycle en brouillon');
+    }
+
+    const bulletinsMisAJour = [];
+
+    for (const item of joursTravailes) {
+      // Trouver le bulletin pour cet employé
+      const bulletins = await this.bulletinPaieRepository.listerParCycle(cycleId);
+      const bulletin = bulletins.find(b => b.employeId === item.employeId);
+      
+      if (bulletin) {
+        // Récupérer l'employé pour validation
+        const employe = await this.employeRepository.trouverParId(item.employeId);
+        if (employe && employe.typeContrat === 'JOURNALIER') {
+          // Valider les jours travaillés
+          if (item.jours < 0 || item.jours > 31) {
+            throw new Error(`Nombre de jours invalide pour l'employé ${employe.prenom} ${employe.nom}: ${item.jours}`);
+          }
+
+          // Recalculer le salaire brut
+          const salaireBrut = (employe.tauxJournalier || 0) * item.jours;
+          const salaireNet = salaireBrut - bulletin.deductions;
+
+          const bulletinMisAJour = await this.bulletinPaieRepository.modifier(bulletin.id, {
+            joursTravailes: item.jours,
+            salaireBrut,
+            salaireNet
+          });
+
+          bulletinsMisAJour.push(bulletinMisAJour);
+        }
+      }
+    }
+
+    // Mettre à jour les totaux du cycle
+    await this.cyclePaieRepository.mettreAJourTotaux(cycleId);
+
+    return bulletinsMisAJour;
+  }
 }
