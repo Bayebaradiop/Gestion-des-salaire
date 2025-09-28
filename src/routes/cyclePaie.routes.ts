@@ -42,44 +42,34 @@ router.delete('/cycles-paie/:id',
   (req, res, next) => cyclePaieController.supprimer(req, res, next)
 );
 
-// PATCH /cycles-paie/:id/status - Modifier le statut d'un cycle (RESTful)
-router.patch('/cycles-paie/:id/status',
+// POST /cycles-paie/:id/approuver - Approuver un cycle
+router.post('/cycles-paie/:id/approuver',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
-  (req, res, next) => {
-    const { action } = req.body;
-    if (action === 'approve') {
-      return cyclePaieController.approuver(req, res, next);
-    } else if (action === 'close') {
-      return cyclePaieController.cloturer(req, res, next);
-    } else {
-      return res.status(400).json({ message: 'Action invalide. Utilisez: approve ou close' });
-    }
-  }
+  (req, res, next) => cyclePaieController.approuver(req, res, next)
 );
 
-// POST /cycles-paie/:id/bulletins - Générer les bulletins (RESTful)
-router.post('/cycles-paie/:id/bulletins',
+// POST /cycles-paie/:id/cloturer - Clôturer un cycle
+router.post('/cycles-paie/:id/cloturer',
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
+  (req, res, next) => cyclePaieController.cloturer(req, res, next)
+);
+
+// POST /cycles-paie/:id/generer-bulletins - Générer les bulletins
+router.post('/cycles-paie/:id/generer-bulletins',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
   (req, res, next) => cyclePaieController.genererBulletins(req, res, next)
 );
 
-// GET /cycles-paie/:id/stats - Obtenir les statistiques d'un cycle (RESTful)
-router.get('/cycles-paie/:id/stats',
+// GET /cycles-paie/:id/statistiques - Obtenir les statistiques d'un cycle
+router.get('/cycles-paie/:id/statistiques',
   autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
   (req, res, next) => cyclePaieController.obtenirStatistiques(req, res, next)
 );
 
-// PATCH /cycles-paie/:id/working-days - Mettre à jour les jours travaillés en lot (RESTful)
-router.patch('/cycles-paie/:id/working-days',
+// PUT /cycles-paie/:id/jours-travailes - Mettre à jour les jours travaillés en lot
+router.put('/cycles-paie/:id/jours-travailes',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
   (req, res, next) => cyclePaieController.mettreAJourJoursTravailes(req, res, next)
 );
-
-// Routes legacy pour compatibilité (à supprimer plus tard)
-router.post('/cycles-paie/:id/approuver', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => cyclePaieController.approuver(req, res, next));
-router.post('/cycles-paie/:id/cloturer', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => cyclePaieController.cloturer(req, res, next));
-router.post('/cycles-paie/:id/generer-bulletins', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => cyclePaieController.genererBulletins(req, res, next));
-router.get('/cycles-paie/:id/statistiques', autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"), (req, res, next) => cyclePaieController.obtenirStatistiques(req, res, next));
-router.put('/cycles-paie/:id/jours-travailes', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => cyclePaieController.mettreAJourJoursTravailes(req, res, next));
 
 export default router;

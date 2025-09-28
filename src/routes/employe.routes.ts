@@ -23,15 +23,12 @@ router.post('/entreprises/:entrepriseId/employes',
   (req, res, next) => employeController.creer(req, res, next)
 );
 
-// GET /entreprises/:entrepriseId/employes/stats - Statistiques des employés (RESTful)
-router.get('/entreprises/:entrepriseId/employes/stats',
+// GET /entreprises/:entrepriseId/employes/statistiques - Statistiques des employés
+router.get('/entreprises/:entrepriseId/employes/statistiques',
   autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
   verifierEntreprise,
   (req, res, next) => employeController.obtenirStatistiques(req, res, next)
 );
-
-// Route legacy pour compatibilité
-router.get('/entreprises/:entrepriseId/employes/statistiques', autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"), verifierEntreprise, (req, res, next) => employeController.obtenirStatistiques(req, res, next));
 
 // Routes pour un employé spécifique
 // GET /employes/:id - Obtenir un employé par ID
@@ -52,26 +49,22 @@ router.delete('/employes/:id',
   (req, res, next) => employeController.supprimer(req, res, next)
 );
 
-// PATCH /employes/:id/status - Modifier le statut d'un employé (RESTful)
-router.patch('/employes/:id/status',
+// POST /employes/:id/activer - Activer un employé
+router.post('/employes/:id/activer',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
-  (req, res, next) => {
-    const { action } = req.body;
-    if (action === 'activate') {
-      return employeController.activer(req, res, next);
-    } else if (action === 'deactivate') {
-      return employeController.desactiver(req, res, next);
-    } else if (action === 'toggle') {
-      return employeController.toggle(req, res, next);
-    } else {
-      return res.status(400).json({ message: 'Action invalide. Utilisez: activate, deactivate, ou toggle' });
-    }
-  }
+  (req, res, next) => employeController.activer(req, res, next)
 );
 
-// Routes legacy pour compatibilité (à supprimer plus tard)
-router.post('/employes/:id/activer', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => employeController.activer(req, res, next));
-router.post('/employes/:id/desactiver', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => employeController.desactiver(req, res, next));
-router.put('/employes/:id/toggle', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => employeController.toggle(req, res, next));
+// POST /employes/:id/desactiver - Désactiver un employé
+router.post('/employes/:id/desactiver',
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
+  (req, res, next) => employeController.desactiver(req, res, next)
+);
+
+// PUT /employes/:id/toggle - Basculer l'état actif/inactif d'un employé
+router.put('/employes/:id/toggle',
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
+  (req, res, next) => employeController.toggle(req, res, next)
+);
 
 export default router;

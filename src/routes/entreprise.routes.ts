@@ -35,13 +35,9 @@ router.put('/:id',
   entrepriseController.modifier
 );
 
-// GET /:id/stats - Obtenir les statistiques d'une entreprise (RESTful)
-router.get('/:id/stats',
+router.get('/:id/statistiques',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
   entrepriseController.obtenirStatistiques
 );
-
-// Route legacy pour compatibilité
-router.get('/:id/statistiques', autoriserRoles("SUPER_ADMIN", "ADMIN"), entrepriseController.obtenirStatistiques);
 
 export default router;

@@ -34,14 +34,11 @@ router.delete('/bulletins/:id',
   (req, res, next) => bulletinPaieController.supprimer(req, res, next)
 );
 
-// PATCH /bulletins/:id/recalculate - Recalculer un bulletin (RESTful)
-router.patch('/bulletins/:id/recalculate',
+// POST /bulletins/:id/recalculer - Recalculer un bulletin
+router.post('/bulletins/:id/recalculer',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
   (req, res, next) => bulletinPaieController.recalculer(req, res, next)
 );
-
-// Route legacy pour compatibilité
-router.post('/bulletins/:id/recalculer', autoriserRoles("SUPER_ADMIN", "ADMIN"), (req, res, next) => bulletinPaieController.recalculer(req, res, next));
 
 // GET /bulletins/:id/pdf - Générer le bulletin de paie PDF
 router.get('/bulletins/:id/pdf',
