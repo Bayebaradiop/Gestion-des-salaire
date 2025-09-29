@@ -13,7 +13,7 @@ export interface InscriptionDto {
   prenom: string;
   nom: string;
   role: RoleUtilisateur;
-  entrepriseId?: number; // Optionnel pour super admin
+  entrepriseId?: number; // Géré automatiquement selon le rôle de l'utilisateur connecté
 }
 
 export interface TokenPayload {

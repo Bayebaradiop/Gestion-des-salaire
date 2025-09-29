@@ -98,7 +98,11 @@ export class AuthService {
         throw new Error('Un utilisateur avec cet email existe déjà');
       }
 
-      // Validation des rôles
+      // Validation des rôles et entreprises
+      if (donnees.role === 'SUPER_ADMIN' && donnees.entrepriseId) {
+        throw new Error('Un SUPER_ADMIN ne doit pas être lié à une entreprise');
+      }
+      
       if ((donnees.role === 'ADMIN' || donnees.role === 'CAISSIER') && !donnees.entrepriseId) {
         throw new Error('Une entreprise est requise pour ce rôle');
       }

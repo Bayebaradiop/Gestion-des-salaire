@@ -22,7 +22,6 @@ interface ProchainPaiement {
 
 export class DashboardService extends BaseRepository {
   async obtenirKPIs(entrepriseId: number): Promise<KPIs> {
-    // Nombre d'employés
     const nombreEmployes = await this.prisma.employe.count({
       where: { entrepriseId }
     });
@@ -133,5 +132,122 @@ export class DashboardService extends BaseRepository {
       montantRestant: b.salaireNet - b.montantPaye,
       dateEcheance: b.cyclePaie.dateFin
     }));
+  }
+
+  async compterCyclesEnCours(entrepriseId: number): Promise<number> {
+    return await this.prisma.cyclePaie.count({
+      where: {
+        entrepriseId,
+        statut: { in: ['BROUILLON', 'APPROUVE'] }
+      }
+    });
+  }
+
+  async compterBulletinsEnAttente(entrepriseId: number): Promise<number> {
+    return await this.prisma.bulletinPaie.count({
+      where: {
+        cyclePaie: { entrepriseId },
+        salaireNet: {
+          gt: this.prisma.bulletinPaie.fields.montantPaye
+        }
+      }
+    });
+  }
+
+  async verifierDonnees(entrepriseId: number): Promise<boolean> {
+    const [employesCount, cyclesCount, bulletinsCount] = await Promise.all([
+      this.prisma.employe.count({ where: { entrepriseId } }),
+      this.prisma.cyclePaie.count({ where: { entrepriseId } }),
+      this.prisma.bulletinPaie.count({
+        where: { cyclePaie: { entrepriseId } }
+      })
+    ]);
+
+    // Considérer qu'il y a des données s'il y a au moins des employés ET des cycles
+    return employesCount > 0 && cyclesCount > 0;
+  }
+
+  async initialiserDonnees(entrepriseId: number): Promise<void> {
+    // Vérifier si l'entreprise existe
+    const entreprise = await this.prisma.entreprise.findUnique({
+      where: { id: entrepriseId }
+    });
+
+    if (!entreprise) {
+      throw new Error(`Entreprise avec l'ID ${entrepriseId} non trouvée`);
+    }
+
+    // Créer des employés exemples s'il n'y en a pas
+    const employesCount = await this.prisma.employe.count({
+      where: { entrepriseId }
+    });
+
+    if (employesCount === 0) {
+      await this.prisma.employe.createMany({
+        data: [
+          {
+            codeEmploye: 'EMP001',
+            prenom: 'Amadou',
+            nom: 'Diallo',
+            email: 'amadou.diallo@example.com',
+            telephone: '+221701234567',
+            poste: 'Développeur Senior',
+            typeContrat: 'FIXE',
+            salaireBase: 850000,
+            dateEmbauche: new Date(),
+            entrepriseId,
+            estActif: true
+          },
+          {
+            codeEmploye: 'EMP002',
+            prenom: 'Fatou',
+            nom: 'Sow',
+            email: 'fatou.sow@example.com',
+            telephone: '+221701234568',
+            poste: 'Chef de Projet',
+            typeContrat: 'FIXE',
+            salaireBase: 750000,
+            dateEmbauche: new Date(),
+            entrepriseId,
+            estActif: true
+          },
+          {
+            codeEmploye: 'EMP003',
+            prenom: 'Moussa',
+            nom: 'Kane',
+            email: 'moussa.kane@example.com',
+            telephone: '+221701234569',
+            poste: 'Comptable',
+            typeContrat: 'FIXE',
+            salaireBase: 650000,
+            dateEmbauche: new Date(),
+            entrepriseId,
+            estActif: true
+          }
+        ]
+      });
+    }
+
+    // Créer un cycle de paie exemple s'il n'y en a pas
+    const cyclesCount = await this.prisma.cyclePaie.count({
+      where: { entrepriseId }
+    });
+
+    if (cyclesCount === 0) {
+      const maintenant = new Date();
+      const debutMois = new Date(maintenant.getFullYear(), maintenant.getMonth(), 1);
+      const finMois = new Date(maintenant.getFullYear(), maintenant.getMonth() + 1, 0);
+
+      await this.prisma.cyclePaie.create({
+        data: {
+          titre: `Cycle ${maintenant.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`,
+          periode: `${maintenant.getFullYear()}-${String(maintenant.getMonth() + 1).padStart(2, '0')}`,
+          dateDebut: debutMois,
+          dateFin: finMois,
+          statut: 'BROUILLON',
+          entrepriseId
+        }
+      });
+    }
   }
 }

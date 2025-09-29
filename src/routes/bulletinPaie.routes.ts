@@ -22,6 +22,12 @@ router.get('/bulletins/:id',
   (req, res, next) => bulletinPaieController.obtenirParId(req, res, next)
 );
 
+// GET /bulletins/:id/details - Obtenir un bulletin avec détails complets
+router.get('/bulletins/:id/details',
+  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  (req, res, next) => bulletinPaieController.obtenirAvecDetails(req, res, next)
+);
+
 // PUT /bulletins/:id - Modifier un bulletin
 router.put('/bulletins/:id',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),

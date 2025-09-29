@@ -11,7 +11,8 @@ router.post('/connexion', authController.connexion);
 router.post('/inscription', authController.inscription);
 router.post('/deconnexion', authController.deconnexion);
 
-// Route protégée pour obtenir le profil
+// Routes protégées pour obtenir le profil
 router.get('/profil', authentifier, authController.profil);
+router.get('/me', authentifier, authController.profil); // Alias pour profil
 
 export default router;

@@ -3,7 +3,6 @@ import type { TypeContrat as PrismaTypeContrat } from '@prisma/client';
 export type TypeContrat = PrismaTypeContrat;
 
 export interface CreerEmployeDto {
-  codeEmploye: string;
   prenom: string;
   nom: string;
   email?: string;
@@ -26,6 +25,7 @@ export interface ModifierEmployeDto {
   salaireBase?: number;
   tauxJournalier?: number;
   compteBancaire?: string;
+  dateEmbauche?: string; // Format ISO - optionnel pour modification
   estActif?: boolean;
 }
 

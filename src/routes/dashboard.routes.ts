@@ -30,4 +30,24 @@ router.get('/entreprises/:entrepriseId/dashboard/prochains-paiements',
   (req, res, next) => dashboardController.obtenirProchainsPaiements(req, res, next)
 );
 
+// GET /entreprises/:entrepriseId/dashboard/all-data - Toutes les données
+router.get('/entreprises/:entrepriseId/dashboard/all-data',
+  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  verifierEntreprise,
+  (req, res, next) => dashboardController.obtenirToutesDonnees(req, res, next)
+);
+
+// GET /entreprises/:entrepriseId/dashboard/check-data - Vérifier si des données existent
+router.get('/entreprises/:entrepriseId/dashboard/check-data',
+  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  verifierEntreprise,
+  (req, res, next) => dashboardController.verifierDonnees(req, res, next)
+);
+
+// POST /dashboard/initialize - Initialiser les données
+router.post('/dashboard/initialize',
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
+  (req, res, next) => dashboardController.initialiserDonnees(req, res, next)
+);
+
 export default router;

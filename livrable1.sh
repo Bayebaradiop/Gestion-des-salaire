@@ -133,12 +133,12 @@ test_endpoint "GET" "/entreprises/1/employes" "" "$COOKIE_SUPERADMIN" "SUPER_ADM
 test_endpoint "GET" "/entreprises/1/employes" "" "$COOKIE_ADMIN" "ADMIN" "Liste des employés"
 test_endpoint "GET" "/entreprises/1/employes" "" "$COOKIE_CAISSIER" "CAISSIER" "Liste des employés"
 
-log_and_echo "📋 5. STATISTIQUES DES EMPLOYÉS"
-log_and_echo "--------------------------------"
+log_and_echo "📋 5. STATISTIQUES DES EMPLOYÉS - ADMIN SEULEMENT"
+log_and_echo "---------------------------------------------------"
 
 test_endpoint "GET" "/entreprises/1/employes/statistiques" "" "$COOKIE_SUPERADMIN" "SUPER_ADMIN" "Statistiques employés"
 test_endpoint "GET" "/entreprises/1/employes/statistiques" "" "$COOKIE_ADMIN" "ADMIN" "Statistiques employés"
-test_endpoint "GET" "/entreprises/1/employes/statistiques" "" "$COOKIE_CAISSIER" "CAISSIER" "Statistiques employés"
+test_endpoint "GET" "/entreprises/1/employes/statistiques" "" "$COOKIE_CAISSIER" "CAISSIER" "Statistiques employés (doit échouer)"
 
 log_and_echo "📋 6. FILTRES DES EMPLOYÉS"
 log_and_echo "---------------------------"
@@ -202,12 +202,12 @@ log_and_echo "🚀 =============================================="
 log_and_echo "🚀 SPRINT 2 - CYCLES DE PAIE & BULLETINS"
 log_and_echo "🚀 =============================================="
 
-log_and_echo "📋 10. LECTURE DES CYCLES - TOUS LES RÔLES"
-log_and_echo "-------------------------------------------"
+log_and_echo "📋 10. LECTURE DES CYCLES - ADMIN SEULEMENT"
+log_and_echo "--------------------------------------------"
 
 test_endpoint "GET" "/entreprises/1/cycles-paie" "" "$COOKIE_SUPERADMIN" "SUPER_ADMIN" "Liste des cycles"
 test_endpoint "GET" "/entreprises/1/cycles-paie" "" "$COOKIE_ADMIN" "ADMIN" "Liste des cycles"
-test_endpoint "GET" "/entreprises/1/cycles-paie" "" "$COOKIE_CAISSIER" "CAISSIER" "Liste des cycles"
+test_endpoint "GET" "/entreprises/1/cycles-paie" "" "$COOKIE_CAISSIER" "CAISSIER" "Liste des cycles (doit échouer)"
 
 log_and_echo "📋 11. CRÉATION DE CYCLE - ADMIN SEULEMENT"
 log_and_echo "------------------------------------------"
@@ -233,8 +233,22 @@ test_endpoint "POST" "/entreprises/1/cycles-paie" '{
 log_and_echo "📋 12. GESTION DES BULLETINS"
 log_and_echo "-----------------------------"
 
-# Obtenir un cycle existant
-CYCLE_ID=$(curl -X GET "$BASE_URL/entreprises/1/cycles-paie" -b $COOKIE_ADMIN -s | jq -r '.[0].id // 1')
+# Créer un nouveau cycle pour s'assurer qu'il est en BROUILLON
+test_endpoint "POST" "/entreprises/1/cycles-paie" '{
+    "nom": "Cycle Bulletins Test",
+    "mois": 12,
+    "annee": 2025,
+    "dateDebut": "2025-12-01",
+    "dateFin": "2025-12-31"
+}' "$COOKIE_ADMIN" "ADMIN" "Création cycle pour bulletins"
+
+# Obtenir l'ID du cycle nouvellement créé
+CYCLE_ID=$(curl -X GET "$BASE_URL/entreprises/1/cycles-paie" -b $COOKIE_ADMIN -s | jq -r 'map(select(.nom == "Cycle Bulletins Test"))[0].id // empty')
+
+# Si pas de cycle trouvé, utiliser le premier disponible
+if [ -z "$CYCLE_ID" ]; then
+  CYCLE_ID=$(curl -X GET "$BASE_URL/entreprises/1/cycles-paie" -b $COOKIE_ADMIN -s | jq -r '.[0].id // 1')
+fi
 
 # Génération de bulletins par ADMIN
 test_endpoint "POST" "/cycles-paie/$CYCLE_ID/generer-bulletins" "" "$COOKIE_ADMIN" "ADMIN" "Génération bulletins par Admin"
@@ -244,12 +258,43 @@ test_endpoint "GET" "/cycles-paie/$CYCLE_ID/bulletins" "" "$COOKIE_SUPERADMIN" "
 test_endpoint "GET" "/cycles-paie/$CYCLE_ID/bulletins" "" "$COOKIE_ADMIN" "ADMIN" "Liste bulletins"
 test_endpoint "GET" "/cycles-paie/$CYCLE_ID/bulletins" "" "$COOKIE_CAISSIER" "CAISSIER" "Liste bulletins"
 
-log_and_echo "📋 13. STATISTIQUES DES CYCLES"
-log_and_echo "-------------------------------"
+log_and_echo "📋 13. STATISTIQUES DES CYCLES - ADMIN SEULEMENT"
+log_and_echo "-------------------------------------------------"
 
 test_endpoint "GET" "/cycles-paie/$CYCLE_ID/statistiques" "" "$COOKIE_SUPERADMIN" "SUPER_ADMIN" "Statistiques cycle"
 test_endpoint "GET" "/cycles-paie/$CYCLE_ID/statistiques" "" "$COOKIE_ADMIN" "ADMIN" "Statistiques cycle"
-test_endpoint "GET" "/cycles-paie/$CYCLE_ID/statistiques" "" "$COOKIE_CAISSIER" "CAISSIER" "Statistiques cycle"
+test_endpoint "GET" "/cycles-paie/$CYCLE_ID/statistiques" "" "$COOKIE_CAISSIER" "CAISSIER" "Statistiques cycle (doit échouer)"
+
+log_and_echo "📋 13.1. TESTS SPÉCIFIQUES CAISSIER - PAIEMENTS SEULEMENT"
+log_and_echo "-----------------------------------------------------------"
+
+# Obtenir un bulletin pour tester les paiements
+BULLETIN_ID=$(curl -X GET "$BASE_URL/cycles-paie/$CYCLE_ID/bulletins" -b $COOKIE_ADMIN -s | jq -r '.[0].id // 1')
+
+# Le CAISSIER peut enregistrer des paiements
+test_endpoint "POST" "/bulletins/$BULLETIN_ID/paiements" '{
+    "montant": 500000,
+    "datePaiement": "2025-09-28",
+    "methodePaiement": "ESPECES",
+    "referenceTransaction": "REF-TEST-001",
+    "numeroRecu": "REC-TEST-001",
+    "commentaire": "Test paiement caissier"
+}' "$COOKIE_CAISSIER" "CAISSIER" "Enregistrement paiement par Caissier"
+
+# Le CAISSIER peut lister les paiements
+test_endpoint "GET" "/bulletins/$BULLETIN_ID/paiements" "" "$COOKIE_CAISSIER" "CAISSIER" "Liste des paiements par Caissier"
+
+# Le CAISSIER peut consulter un bulletin
+test_endpoint "GET" "/bulletins/$BULLETIN_ID" "" "$COOKIE_CAISSIER" "CAISSIER" "Consultation bulletin par Caissier"
+
+# Le CAISSIER peut générer un reçu PDF (si paiement existe)
+PAIEMENT_ID=$(curl -X GET "$BASE_URL/bulletins/$BULLETIN_ID/paiements" -b $COOKIE_CAISSIER -s | jq -r '.[0].id // 1')
+test_endpoint "GET" "/paiements/$PAIEMENT_ID/pdf" "" "$COOKIE_CAISSIER" "CAISSIER" "Génération reçu PDF par Caissier"
+
+# Le CAISSIER NE peut PAS modifier un paiement (doit échouer)
+test_endpoint "PUT" "/paiements/$PAIEMENT_ID" '{
+    "commentaire": "Modification refusée"
+}' "$COOKIE_CAISSIER" "CAISSIER" "Modification paiement par Caissier (doit échouer)"
 
 log_and_echo "📋 14. APPROBATION/CLÔTURE - ADMIN SEULEMENT"
 log_and_echo "---------------------------------------------"

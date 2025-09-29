@@ -27,22 +27,33 @@ export class EmployeService {
       throw new Error('Entreprise non trouvée');
     }
 
-    // Vérifier l'unicité du code employé dans l'entreprise
-    const codeExiste = await this.employeRepository.verifierCodeUnique(entrepriseId, donnees.codeEmploye);
-    if (!codeExiste) {
-      throw new Error('Ce code employé existe déjà dans l\'entreprise');
-    }
+    // Générer automatiquement le code employé
+    const codeEmploye = await this.genererCodeEmploye(entrepriseId);
 
     // Validation des données selon le type de contrat
     this.validerDonneesContrat(donnees);
 
     const nouvelEmploye = await this.employeRepository.creer({
       ...donnees,
+      codeEmploye,
       dateEmbauche: new Date(donnees.dateEmbauche),
       entrepriseId
     });
 
     return nouvelEmploye;
+  }
+
+  /**
+   * Génère un code employé unique pour une entreprise
+   * Format: EMP-{entrepriseId}-{compteur}
+   */
+  private async genererCodeEmploye(entrepriseId: number): Promise<string> {
+    // Compter le nombre d'employés existants dans cette entreprise
+    const count = await this.employeRepository.compterParEntreprise(entrepriseId);
+    
+    // Générer le code avec un compteur incrémental
+    const numeroSequentiel = (count + 1).toString().padStart(4, '0');
+    return `EMP-${entrepriseId}-${numeroSequentiel}`;
   }
 
   async modifier(id: number, donnees: ModifierEmployeDto): Promise<Employe> {
@@ -62,7 +73,13 @@ export class EmployeService {
       this.validerDonneesContrat(donneesAValider);
     }
 
-    return await this.employeRepository.modifier(id, donnees);
+    // Préparer les données avec conversion de date si nécessaire
+    const donneesPreparees: any = { ...donnees };
+    if (donnees.dateEmbauche) {
+      donneesPreparees.dateEmbauche = new Date(donnees.dateEmbauche);
+    }
+
+    return await this.employeRepository.modifier(id, donneesPreparees);
   }
 
   async supprimer(id: number): Promise<void> {

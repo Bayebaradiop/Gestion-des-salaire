@@ -62,6 +62,20 @@ async function main() {
       entrepriseId: entreprise.id
     }
   });
+  
+  // Créer un admin avec l'email admin@gmail.com
+  const testAdmin = await prisma.utilisateur.upsert({
+    where: { email: 'admin@gmail.com' },
+    update: {},
+    create: {
+      email: 'admin@gmail.com',
+      motDePasse: bcrypt.hashSync('password123', 10),
+      prenom: 'Admin',
+      nom: 'Gmail',
+      role: 'ADMIN',
+      entrepriseId: entreprise.id
+    }
+  });
 
   console.log('✅ Utilisateurs créés');
 

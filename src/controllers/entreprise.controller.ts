@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { EntrepriseService } from '../services/entreprise.service.js';
+import { creerEntrepriseSchema, modifierEntrepriseSchema, entrepriseParamsSchema } from '../validator/entreprise.validator.js';
 
 export class EntrepriseController {
   private service: EntrepriseService;
@@ -19,7 +20,14 @@ export class EntrepriseController {
 
   public obtenirParId = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const entreprise = await this.service.obtenirParId(parseInt(req.params.id));
+      const verifParams = entrepriseParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          errors: verifParams.error.format()
+        });
+      }
+
+      const entreprise = await this.service.obtenirParId(verifParams.data.id);
       if (!entreprise) {
         res.status(404).json({ message: 'Entreprise non trouvée' });
         return;
@@ -32,7 +40,14 @@ export class EntrepriseController {
 
   public creer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const entreprise = await this.service.creer(req.body);
+      const verif = creerEntrepriseSchema.safeParse(req.body);
+      if (!verif.success) {
+        return res.status(400).json({
+          errors: verif.error.format()
+        });
+      }
+
+      const entreprise = await this.service.creer(verif.data);
       res.status(201).json(entreprise);
     } catch (error) {
       next(error);
@@ -41,7 +56,21 @@ export class EntrepriseController {
 
   public modifier = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const entreprise = await this.service.modifier(parseInt(req.params.id), req.body);
+      const verifParams = entrepriseParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          errors: verifParams.error.format()
+        });
+      }
+
+      const verifBody = modifierEntrepriseSchema.safeParse(req.body);
+      if (!verifBody.success) {
+        return res.status(400).json({
+          errors: verifBody.error.format()
+        });
+      }
+
+      const entreprise = await this.service.modifier(verifParams.data.id, verifBody.data);
       res.json(entreprise);
     } catch (error) {
       next(error);

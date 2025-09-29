@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express';
 import { CyclePaieService } from '../services/cyclePaie.service.js';
+import { creerCyclePaieSchema, modifierCyclePaieSchema, cyclePaieParamsSchema } from '../validator/cyclepaie.validator.js';
 
 export class CyclePaieController {
   private service: CyclePaieService;
@@ -20,7 +21,14 @@ export class CyclePaieController {
 
   public obtenirParId = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const cycle = await this.service.obtenirParId(parseInt(req.params.id));
+      const verifParams = cyclePaieParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          errors: verifParams.error.format()
+        });
+      }
+
+      const cycle = await this.service.obtenirParId(verifParams.data.id);
       if (!cycle) {
         res.status(404).json({ message: 'Cycle de paie non trouvé' });
         return;
@@ -33,11 +41,36 @@ export class CyclePaieController {
 
   public creer = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const donnees = {
+      const verif = creerCyclePaieSchema.safeParse({
         ...req.body,
-        dateDebut: new Date(req.body.dateDebut),
-        dateFin: new Date(req.body.dateFin),
-        entrepriseId: parseInt(req.params.entrepriseId),
+        entrepriseId: parseInt(req.params.entrepriseId)
+      });
+      if (!verif.success) {
+        return res.status(400).json({
+          errors: verif.error.format()
+        });
+      }
+
+      // S'assurer que periode est définie
+      let periode = verif.data.periode;
+      if (!periode && verif.data.mois && verif.data.annee) {
+        // Générer la période au format "YYYY-MM"
+        const moisFormate = verif.data.mois.toString().padStart(2, '0');
+        periode = `${verif.data.annee}-${moisFormate}`;
+      }
+      
+      if (!periode) {
+        return res.status(400).json({
+          message: "La période est requise ou doit être calculée à partir du mois et de l'année"
+        });
+      }
+
+      const donnees = {
+        titre: verif.data.titre,
+        periode,
+        dateDebut: new Date(verif.data.dateDebut),
+        dateFin: new Date(verif.data.dateFin),
+        entrepriseId: verif.data.entrepriseId,
       };
       const cycle = await this.service.creer(donnees);
       res.status(201).json(cycle);

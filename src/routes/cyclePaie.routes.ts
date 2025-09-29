@@ -9,9 +9,9 @@ const cyclePaieController = new CyclePaieController();
 router.use(authentifier);
 
 // Routes avec vérification d'entreprise pour Admin et Caissier
-// GET /entreprises/:entrepriseId/cycles-paie - Lister les cycles de paie d'une entreprise
+// GET /entreprises/:entrepriseId/cycles-paie - Lister les cycles de paie d'une entreprise (ADMIN seulement)
 router.get('/entreprises/:entrepriseId/cycles-paie',
-  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
   verifierEntreprise,
   (req, res, next) => cyclePaieController.listerParEntreprise(req, res, next)
 );
@@ -24,9 +24,9 @@ router.post('/entreprises/:entrepriseId/cycles-paie',
 );
 
 // Routes pour un cycle spécifique
-// GET /cycles-paie/:id - Obtenir un cycle par ID
+// GET /cycles-paie/:id - Obtenir un cycle par ID (ADMIN seulement)
 router.get('/cycles-paie/:id',
-  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
   (req, res, next) => cyclePaieController.obtenirParId(req, res, next)
 );
 
@@ -70,6 +70,27 @@ router.get('/cycles-paie/:id/statistiques',
 router.put('/cycles-paie/:id/jours-travailes',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
   (req, res, next) => cyclePaieController.mettreAJourJoursTravailes(req, res, next)
+);
+
+// Routes simplifiées pour ADMIN (utilisation automatique de leur entrepriseId)
+// POST /cycles-paie - Créer un cycle de paie (utilise l'entrepriseId de l'utilisateur connecté)
+router.post('/cycles-paie',
+  autoriserRoles("ADMIN"),
+  (req, res, next) => {
+    // Simule le paramètre entrepriseId pour compatibilité avec le controller existant
+    req.params.entrepriseId = req.utilisateur?.entrepriseId?.toString() || '0';
+    cyclePaieController.creer(req, res, next);
+  }
+);
+
+// GET /cycles-paie - Lister les cycles de paie de l'entreprise de l'utilisateur connecté
+router.get('/cycles-paie',
+  autoriserRoles("ADMIN"),
+  (req, res, next) => {
+    // Simule le paramètre entrepriseId pour compatibilité avec le controller existant
+    req.params.entrepriseId = req.utilisateur?.entrepriseId?.toString() || '0';
+    cyclePaieController.listerParEntreprise(req, res, next);
+  }
 );
 
 export default router;

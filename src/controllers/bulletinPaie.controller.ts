@@ -3,6 +3,7 @@ import { BulletinPaieService } from '../services/bulletinPaie.service.js';
 import { CyclePaieRepository } from '../repositories/cyclePaie.repository.js';
 import { BulletinPaieRepository } from '../repositories/bulletinPaie.repository.js';
 import { PDFService } from '../services/pdf.service.js';
+import { creerBulletinPaieSchema, modifierBulletinPaieSchema, bulletinPaieParamsSchema } from '../validator/bulletin.validator.js';
 
 export class BulletinPaieController {
   private service: BulletinPaieService;
@@ -17,7 +18,6 @@ export class BulletinPaieController {
 
   public listerParCycle = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Vérifier l'appartenance à l'entreprise pour ADMIN/CAISSIER
       const cycle = await this.cycleRepo.trouverParId(parseInt(req.params.cycleId));
       if (!cycle) {
         res.status(404).json({ message: 'Cycle non trouvé' });
@@ -37,6 +37,26 @@ export class BulletinPaieController {
   public obtenirParId = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const bulletin = await this.bulletinRepo.trouverParId(parseInt(req.params.id));
+      if (!bulletin) {
+        res.status(404).json({ message: 'Bulletin non trouvé' });
+        return;
+      }
+      if (req.utilisateur && req.utilisateur.role !== 'SUPER_ADMIN') {
+        const cycle = await this.cycleRepo.trouverParId(bulletin.cyclePaieId);
+        if (!cycle || req.utilisateur.entrepriseId !== cycle.entrepriseId) {
+          res.status(403).json({ message: 'Accès refusé - Entreprise non autorisée' });
+          return;
+        }
+      }
+      res.json(bulletin);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public obtenirAvecDetails = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const bulletin = await this.service.obtenirAvecDetails(parseInt(req.params.id));
       if (!bulletin) {
         res.status(404).json({ message: 'Bulletin non trouvé' });
         return;

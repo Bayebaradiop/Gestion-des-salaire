@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { PaiementService } from '../services/paiement.service.js';
 import { PDFService } from '../services/pdf.service.js';
+import { enregistrerPaiementSchema, modifierPaiementSchema, paiementParamsSchema } from '../validator/paiement.validator.js';
 
 export class PaiementController {
   private service: PaiementService;
@@ -20,7 +21,14 @@ export class PaiementController {
 
   public obtenirParId = async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const paiement = await this.service.obtenirParId(parseInt(req.params.id));
+      const verifParams = paiementParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          errors: verifParams.error.format()
+        });
+      }
+
+      const paiement = await this.service.obtenirParId(verifParams.data.id);
       if (!paiement) {
         res.status(404).json({ message: 'Paiement non trouvé' });
         return;
@@ -37,9 +45,19 @@ export class PaiementController {
         res.status(401).json({ message: 'Non authentifié' });
         return;
       }
-      const paiement = await this.service.creer({
+
+      const verif = enregistrerPaiementSchema.safeParse({
         ...req.body,
-        bulletinPaieId: parseInt(req.params.bulletinId),
+        bulletinPaieId: parseInt(req.params.bulletinId)
+      });
+      if (!verif.success) {
+        return res.status(400).json({
+          errors: verif.error.format()
+        });
+      }
+
+      const paiement = await this.service.creer({
+        ...verif.data,
         traiteParId: req.utilisateur.id,
       });
       res.status(201).json(paiement);

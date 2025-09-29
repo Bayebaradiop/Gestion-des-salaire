@@ -23,9 +23,9 @@ router.post('/entreprises/:entrepriseId/employes',
   (req, res, next) => employeController.creer(req, res, next)
 );
 
-// GET /entreprises/:entrepriseId/employes/statistiques - Statistiques des employés
+// GET /entreprises/:entrepriseId/employes/statistiques - Statistiques des employés (ADMIN seulement)
 router.get('/entreprises/:entrepriseId/employes/statistiques',
-  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
   verifierEntreprise,
   (req, res, next) => employeController.obtenirStatistiques(req, res, next)
 );
@@ -65,6 +65,27 @@ router.post('/employes/:id/desactiver',
 router.put('/employes/:id/toggle',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
   (req, res, next) => employeController.toggle(req, res, next)
+);
+
+// Routes simplifiées pour ADMIN/CAISSIER (utilisation automatique de leur entrepriseId)
+// POST /employes - Créer un employé (utilise l'entrepriseId de l'utilisateur connecté)
+router.post('/employes',
+  autoriserRoles("ADMIN"),
+  (req, res, next) => {
+    // Simule le paramètre entrepriseId pour compatibilité avec le controller existant
+    req.params.entrepriseId = req.utilisateur?.entrepriseId?.toString() || '0';
+    employeController.creer(req, res, next);
+  }
+);
+
+// GET /employes - Lister les employés de l'entreprise de l'utilisateur connecté
+router.get('/employes',
+  autoriserRoles("ADMIN", "CAISSIER"),
+  (req, res, next) => {
+    // Simule le paramètre entrepriseId pour compatibilité avec le controller existant
+    req.params.entrepriseId = req.utilisateur?.entrepriseId?.toString() || '0';
+    employeController.listerParEntreprise(req, res, next);
+  }
 );
 
 export default router;

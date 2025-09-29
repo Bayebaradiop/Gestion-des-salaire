@@ -1,41 +1,43 @@
+/**
+ * Messages d'erreur standardisés pour l'API
+ */
+
 export const ERROR_MESSAGES = {
   // Erreurs générales
-  VALIDATION_ERROR: 'Erreur de validation des données',
-  INTERNAL_SERVER_ERROR: 'Erreur interne du serveur',
-  NOT_FOUND: 'Resource non trouvée',
-  UNAUTHORIZED: 'Non autorisé',
-  FORBIDDEN: 'Accès interdit',
-
-  // Messages pour les champs
-  FIELDS: {
-    REQUIRED: 'Ce champ est obligatoire',
-    EMAIL_INVALID: 'Format d\'email invalide',
-    EMAIL_REQUIRED: 'L\'email est obligatoire',
-    PASSWORD_TOO_SHORT: 'Le mot de passe doit contenir au moins 8 caractères',
-    PASSWORD_REQUIRED: 'Le mot de passe est obligatoire',
-    NOM_TOO_SHORT: 'Le nom doit contenir au moins 2 caractères',
-    PRENOM_TOO_SHORT: 'Le prénom doit contenir au moins 2 caractères',
-  },
-
+  INTERNAL_ERROR: "Une erreur interne s'est produite",
+  NOT_FOUND: "Ressource non trouvée",
+  UNAUTHORIZED: "Accès non autorisé",
+  FORBIDDEN: "Accès interdit",
+  BAD_REQUEST: "Requête invalide",
+  VALIDATION_ERROR: "Erreur de validation",
+  
   // Erreurs d'authentification
-  AUTH: {
-    INVALID_CREDENTIALS: 'Email ou mot de passe incorrect',
-    TOKEN_EXPIRED: 'Token expiré',
-    TOKEN_INVALID: 'Token invalide',
-    ACCESS_DENIED: 'Accès refusé',
-    EMAIL_ALREADY_EXISTS: 'Cet email est déjà utilisé',
-    USER_NOT_FOUND: 'Utilisateur non trouvé',
-  },
-
-  // Messages pour l'entreprise
-  ENTREPRISE: {
-    NOT_FOUND: 'Entreprise non trouvée',
-    ALREADY_EXISTS: 'Une entreprise avec ce nom existe déjà',
-  },
-
-  // Messages pour les employés
-  EMPLOYE: {
-    NOT_FOUND: 'Employé non trouvé',
-    CODE_ALREADY_EXISTS: 'Ce code employé existe déjà',
-  },
+  INVALID_CREDENTIALS: "Email ou mot de passe incorrect",
+  TOKEN_EXPIRED: "Token expiré",
+  TOKEN_INVALID: "Token invalide",
+  ACCESS_DENIED: "Accès refusé",
+  
+  // Erreurs d'entreprise
+  ENTREPRISE_NOT_FOUND: "Entreprise non trouvée",
+  ENTREPRISE_EXISTS: "Une entreprise avec ce nom existe déjà",
+  
+  // Erreurs d'employé
+  EMPLOYE_NOT_FOUND: "Employé non trouvé",
+  EMPLOYE_CODE_EXISTS: "Un employé avec ce code existe déjà",
+  
+  // Erreurs de cycle de paie
+  CYCLE_NOT_FOUND: "Cycle de paie non trouvé",
+  CYCLE_CLOSED: "Ce cycle de paie est fermé",
+  CYCLE_EXISTS: "Un cycle pour cette période existe déjà",
+  
+  // Erreurs de bulletin de paie
+  BULLETIN_NOT_FOUND: "Bulletin de paie non trouvé",
+  BULLETIN_EXISTS: "Un bulletin avec ce numéro existe déjà",
+  
+  // Erreurs de paiement
+  PAIEMENT_NOT_FOUND: "Paiement non trouvé",
+  PAIEMENT_ALREADY_PAID: "Ce bulletin a déjà été payé",
+  MONTANT_INSUFFISANT: "Montant insuffisant"
 } as const;
+
+export type ErrorMessage = typeof ERROR_MESSAGES[keyof typeof ERROR_MESSAGES];

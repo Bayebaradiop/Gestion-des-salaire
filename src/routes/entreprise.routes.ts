@@ -1,9 +1,11 @@
 import { Router } from 'express';
 import { EntrepriseController } from '../controllers/entreprise.controller.js';
+import { AdminController } from '../controllers/admin.controller.js';
 import { authentifier, autoriserRoles } from '../middleware/auth.middleware.js';
 
 const router = Router();
 const entrepriseController = new EntrepriseController();
+const adminController = new AdminController();
 
 // Toutes les routes nécessitent une authentification
 router.use(authentifier);
@@ -38,6 +40,12 @@ router.put('/:id',
 router.get('/:id/statistiques',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),
   entrepriseController.obtenirStatistiques
+);
+
+// Route pour que les SUPER_ADMIN créent des utilisateurs d'entreprise
+router.post('/:id/utilisateurs',
+  autoriserRoles("SUPER_ADMIN"),
+  adminController.creerUtilisateurPourEntreprise
 );
 
 export default router;

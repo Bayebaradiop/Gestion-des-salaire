@@ -28,9 +28,9 @@ router.get('/paiements/:id',
   (req, res, next) => paiementController.obtenirParId(req, res, next)
 );
 
-// PUT /paiements/:id - Modifier un paiement
+// PUT /paiements/:id - Modifier un paiement (ADMIN seulement)
 router.put('/paiements/:id',
-  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
   (req, res, next) => paiementController.modifier(req, res, next)
 );
 
