@@ -76,6 +76,38 @@ const dashboardService = {
    */
   async getDashboardData(entrepriseId) {
     return api.get(`/entreprises/${entrepriseId}/dashboard/all-data`);
+  },
+
+  /**
+   * Récupère les statistiques globales pour le super admin
+   * @returns {Promise} - Promesse contenant les statistiques globales
+   */
+  async getGlobalStats() {
+    return api.get('/global/stats');
+  },
+
+  /**
+   * Récupère l'évolution globale de la masse salariale
+   * @returns {Promise} - Promesse contenant les données d'évolution
+   */
+  async getGlobalSalaryEvolution() {
+    return api.get('/global/evolution-masse-salariale');
+  },
+
+  /**
+   * Récupère la répartition des employés par entreprise
+   * @returns {Promise} - Promesse contenant les données de répartition
+   */
+  async getEmployeeDistribution() {
+    return api.get('/global/repartition-employes');
+  },
+
+  /**
+   * Récupère toutes les données globales du dashboard super admin
+   * @returns {Promise} - Promesse contenant toutes les données globales
+   */
+  async getGlobalDashboardData() {
+    return api.get('/global/all-data');
   }
 };
 

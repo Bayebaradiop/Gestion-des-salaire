@@ -6,10 +6,24 @@ import {
   FaPlay, FaPause, FaEye, FaKey, FaArrowUp, FaArrowDown,
   FaCalendarAlt, FaCreditCard, FaFileInvoiceDollar
 } from 'react-icons/fa';
+import {
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
 import Button from '../components/ui/Button';
 import EntrepriseLogo from '../components/ui/EntrepriseLogo';
 import EntrepriseModal from '../components/modals/EntrepriseModal';
 import entrepriseService from '../services/entreprise.service';
+import dashboardService from '../services/dashboard.service';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
@@ -26,6 +40,10 @@ const SuperAdminDashboard = () => {
     montantTotalRestant: 0,
     totalBulletins: 0
   });
+  const [chartData, setChartData] = useState({
+    evolution: [],
+    repartition: []
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEntreprise, setSelectedEntreprise] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,34 +54,53 @@ const SuperAdminDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        const response = await entrepriseService.getEntreprises();
-        const entreprisesData = response.data;
 
+        // Fetch enterprises list
+        const entreprisesResponse = await entrepriseService.getEntreprises();
+        const entreprisesData = entreprisesResponse.data;
         setEntreprises(entreprisesData);
 
-        // Calculer les statistiques globales
-        const totalEntreprises = entreprisesData.length;
-        const totalUtilisateurs = entreprisesData.reduce((sum, e) => sum + (e.nombreEmployes || 0), 0);
-        const totalEmployes = entreprisesData.reduce((sum, e) => sum + (e.nombreEmployesActifs || 0), 0);
-        const masseSalarialeTotale = entreprisesData.reduce((sum, e) => sum + (e.masseSalarialeMensuelle || 0), 0);
-
-        // Données simulées pour les paiements et bulletins (à remplacer par vraies données API)
-        const montantTotalPaye = masseSalarialeTotale * 0.8; // Simulation
-        const montantTotalRestant = masseSalarialeTotale * 0.2; // Simulation
-        const totalBulletins = totalEmployes * 12; // Simulation
+        // Fetch global dashboard data
+        const globalDataResponse = await dashboardService.getGlobalDashboardData();
+        const { stats: globalStats, evolution, repartition } = globalDataResponse.data;
 
         setStats({
-          totalEntreprises,
-          totalUtilisateurs,
-          totalEmployes,
-          masseSalarialeTotale,
-          montantTotalPaye,
-          montantTotalRestant,
-          totalBulletins
+          totalEntreprises: globalStats.totalEntreprises,
+          totalUtilisateurs: globalStats.totalEmployesActifs, // Using active employees as total users
+          totalEmployes: globalStats.totalEmployesActifs,
+          masseSalarialeTotale: globalStats.masseSalarialeTotale,
+          montantTotalPaye: globalStats.montantTotalPaye,
+          montantTotalRestant: globalStats.montantTotalRestant,
+          totalBulletins: globalStats.totalBulletinsGeneres
         });
+
+        setChartData({
+          evolution,
+          repartition
+        });
+
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         toast.error('Impossible de charger les données du dashboard');
+
+        // Fallback to basic enterprise data if global stats fail
+        try {
+          const response = await entrepriseService.getEntreprises();
+          const entreprisesData = response.data;
+          setEntreprises(entreprisesData);
+
+          const totalEntreprises = entreprisesData.length;
+          const totalEmployes = entreprisesData.reduce((sum, e) => sum + (e.nombreEmployesActifs || 0), 0);
+
+          setStats(prev => ({
+            ...prev,
+            totalEntreprises,
+            totalEmployes,
+            totalUtilisateurs: totalEmployes
+          }));
+        } catch (fallbackError) {
+          console.error('Erreur lors du chargement des données de fallback:', fallbackError);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -255,13 +292,44 @@ const SuperAdminDashboard = () => {
                   <FaChartLine className="mr-2 text-blue-600" />
                   Évolution de la masse salariale
                 </h3>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <FaChartLine className="mx-auto text-4xl mb-2" />
-                    <p>Graphique d'évolution mensuelle</p>
-                    <p className="text-sm">Intégration Chart.js recommandée</p>
-                  </div>
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={chartData.evolution}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="mois"
+                      tick={{ fontSize: 12 }}
+                      stroke="#666"
+                    />
+                    <YAxis
+                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}K`}
+                      tick={{ fontSize: 12 }}
+                      stroke="#666"
+                    />
+                    <Tooltip
+                      formatter={(value) => [new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: 'XOF',
+                        minimumFractionDigits: 0
+                      }).format(value), 'Masse Salariale']}
+                      labelStyle={{ color: '#333' }}
+                      contentStyle={{
+                        backgroundColor: '#fff',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="montant"
+                      name="Masse salariale"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      dot={{ fill: '#3b82f6', strokeWidth: 2, r: 5 }}
+                      activeDot={{ r: 7, stroke: '#3b82f6', strokeWidth: 2 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
 
               {/* Employee Distribution */}
@@ -270,13 +338,25 @@ const SuperAdminDashboard = () => {
                   <FaUsers className="mr-2 text-green-600" />
                   Répartition des employés
                 </h3>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <FaUsers className="mx-auto text-4xl mb-2" />
-                    <p>Camembert par entreprise</p>
-                    <p className="text-sm">Intégration Chart.js recommandée</p>
-                  </div>
-                </div>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={chartData.repartition}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ nom, employesActifs }) => `${nom}: ${employesActifs}`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="employesActifs"
+                    >
+                      {chartData.repartition.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={`hsl(${(index * 137.5) % 360}, 70%, 50%)`} />
+                      ))}
+                    </Pie>
+                    <Tooltip formatter={(value) => [value, 'Employés actifs']} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
 

@@ -50,4 +50,25 @@ router.get('/entreprises/:entrepriseId/dashboard/check-data',
 //   (req, res, next) => dashboardController.initialiserDonnees(req, res, next)
 // );
 
+// Routes pour le dashboard super admin (global)
+router.get('/global/stats',
+  autoriserRoles("SUPER_ADMIN"),
+  (req, res, next) => dashboardController.obtenirStatsGlobales(req, res, next)
+);
+
+router.get('/global/evolution-masse-salariale',
+  autoriserRoles("SUPER_ADMIN"),
+  (req, res, next) => dashboardController.obtenirEvolutionMasseSalarialeGlobale(req, res, next)
+);
+
+router.get('/global/repartition-employes',
+  autoriserRoles("SUPER_ADMIN"),
+  (req, res, next) => dashboardController.obtenirRepartitionEmployesParEntreprise(req, res, next)
+);
+
+router.get('/global/all-data',
+  autoriserRoles("SUPER_ADMIN"),
+  (req, res, next) => dashboardController.obtenirToutesDonneesGlobales(req, res, next)
+);
+
 export default router;

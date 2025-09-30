@@ -167,4 +167,92 @@ export class DashboardService extends BaseRepository {
     return employesCount > 0 && cyclesCount > 0;
   }
 
+  async obtenirStatsGlobales(): Promise<{
+    totalEntreprises: number;
+    totalEmployesActifs: number;
+    masseSalarialeTotale: number;
+    totalBulletinsGeneres: number;
+    montantTotalPaye: number;
+    montantTotalRestant: number;
+  }> {
+    // Statistiques globales pour le super admin
+    const totalEntreprises = await this.prisma.entreprise.count();
+
+    const totalEmployesActifs = await this.prisma.employe.count({
+      where: { estActif: true }
+    });
+
+    // Masse salariale totale (somme des salaires nets de tous les bulletins)
+    const bulletinsResult = await this.prisma.bulletinPaie.aggregate({
+      _sum: {
+        salaireNet: true,
+        montantPaye: true
+      },
+      _count: true
+    });
+
+    const masseSalarialeTotale = bulletinsResult._sum.salaireNet || 0;
+    const montantTotalPaye = bulletinsResult._sum.montantPaye || 0;
+    const montantTotalRestant = masseSalarialeTotale - montantTotalPaye;
+    const totalBulletinsGeneres = bulletinsResult._count;
+
+    return {
+      totalEntreprises,
+      totalEmployesActifs,
+      masseSalarialeTotale,
+      totalBulletinsGeneres,
+      montantTotalPaye,
+      montantTotalRestant
+    };
+  }
+
+  async obtenirEvolutionMasseSalarialeGlobale(): Promise<EvolutionMasseSalariale[]> {
+    // Récupérer les 6 derniers mois pour toutes les entreprises
+    const maintenant = new Date();
+    const resultats: EvolutionMasseSalariale[] = [];
+
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(maintenant.getFullYear(), maintenant.getMonth() - i, 1);
+      const debutMois = new Date(date.getFullYear(), date.getMonth(), 1);
+      const finMois = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
+
+      const montant = await this.prisma.bulletinPaie.aggregate({
+        where: {
+          creeLe: {
+            gte: debutMois,
+            lte: finMois
+          }
+        },
+        _sum: { salaireNet: true }
+      });
+
+      resultats.push({
+        mois: date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'short' }),
+        montant: montant._sum.salaireNet || 0
+      });
+    }
+
+    return resultats;
+  }
+
+  async obtenirRepartitionEmployesParEntreprise(): Promise<{ nom: string; employesActifs: number }[]> {
+    const entreprises = await this.prisma.entreprise.findMany({
+      select: {
+        nom: true,
+        _count: {
+          select: {
+            employes: {
+              where: { estActif: true }
+            }
+          }
+        }
+      }
+    });
+
+    return entreprises.map(entreprise => ({
+      nom: entreprise.nom,
+      employesActifs: entreprise._count.employes
+    })).filter(item => item.employesActifs > 0);
+  }
+
 }

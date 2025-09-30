@@ -83,5 +83,54 @@ export class DashboardController {
     }
   };
 
+  // Statistiques globales pour le super admin
+  public obtenirStatsGlobales = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const stats = await this.service.obtenirStatsGlobales();
+      res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Évolution globale de la masse salariale
+  public obtenirEvolutionMasseSalarialeGlobale = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.obtenirEvolutionMasseSalarialeGlobale();
+      res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Répartition des employés par entreprise
+  public obtenirRepartitionEmployesParEntreprise = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const data = await this.service.obtenirRepartitionEmployesParEntreprise();
+      res.json(data);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  // Toutes les données du dashboard super admin
+  public obtenirToutesDonneesGlobales = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const [stats, evolution, repartition] = await Promise.all([
+        this.service.obtenirStatsGlobales(),
+        this.service.obtenirEvolutionMasseSalarialeGlobale(),
+        this.service.obtenirRepartitionEmployesParEntreprise()
+      ]);
+
+      res.json({
+        stats,
+        evolution,
+        repartition
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
+
 
 }
