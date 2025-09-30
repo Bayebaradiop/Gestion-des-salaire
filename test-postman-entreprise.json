@@ -1,0 +1,166 @@
+{
+  "info": {
+    "name": "Test Création Entreprise avec Logo",
+    "description": "Test pour créer une entreprise avec un logo base64"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Login Super Admin",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"admin@super.com\",\n  \"motDePasse\": \"Admin123!\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 200) {",
+              "    const response = pm.response.json();",
+              "    pm.globals.set('auth_token', response.token);",
+              "    console.log('Token saved:', response.token);",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Créer Entreprise avec Logo Base64",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/entreprises",
+          "host": ["{{base_url}}"],
+          "path": ["api", "entreprises"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nom\": \"Test Entreprise Logo\",\n  \"logo\": \"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==\",\n  \"adresse\": \"123 Avenue Test, Ville Test, 12345\",\n  \"telephone\": \"+221771234567\",\n  \"email\": \"test@entreprise.com\",\n  \"devise\": \"XOF\",\n  \"periodePaie\": \"MENSUELLE\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Entreprise créée avec succès', function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "",
+              "pm.test('Logo présent dans la réponse', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.logo).to.not.be.null;",
+              "    pm.expect(response.logo).to.include('data:image');",
+              "    pm.globals.set('entreprise_id', response.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Vérifier Entreprise Créée",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/entreprises/{{entreprise_id}}",
+          "host": ["{{base_url}}"],
+          "path": ["api", "entreprises", "{{entreprise_id}}"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Entreprise récupérée avec succès', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Logo toujours présent', function () {",
+              "    const response = pm.response.json();",
+              "    pm.expect(response.logo).to.not.be.null;",
+              "    pm.expect(response.logo).to.include('data:image');",
+              "    console.log('Logo trouvé:', response.logo.substring(0, 50) + '...');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Lister Toutes les Entreprises",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{auth_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/entreprises",
+          "host": ["{{base_url}}"],
+          "path": ["api", "entreprises"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Liste des entreprises récupérée', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Logo présent dans la liste', function () {",
+              "    const response = pm.response.json();",
+              "    const testEntreprise = response.find(e => e.id == pm.globals.get('entreprise_id'));",
+              "    pm.expect(testEntreprise).to.not.be.undefined;",
+              "    pm.expect(testEntreprise.logo).to.not.be.null;",
+              "    pm.expect(testEntreprise.logo).to.include('data:image');",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

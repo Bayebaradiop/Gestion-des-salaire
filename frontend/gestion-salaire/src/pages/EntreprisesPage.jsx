@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { FaEdit, FaTrash, FaPlus, FaUsers } from 'react-icons/fa';
 import Button from '../components/ui/Button';
+import EntrepriseLogo from '../components/ui/EntrepriseLogo';
 import EntrepriseModal from '../components/modals/EntrepriseModal';
 import entrepriseService from '../services/entreprise.service';
 import { useNavigate } from 'react-router-dom';
@@ -112,7 +113,16 @@ const EntreprisesPage = () => {
             >
               <div className="p-4 border-b">
                 <div className="flex justify-between items-start">
-                  <h3 className="text-lg font-semibold">{entreprise.nom}</h3>
+                  <div className="flex items-center space-x-3">
+                    <EntrepriseLogo 
+                      entreprise={entreprise} 
+                      size="md"
+                    />
+                    <div>
+                      <h3 className="text-lg font-semibold">{entreprise.nom}</h3>
+                      <p className="text-sm text-gray-500">{entreprise.secteurActivite}</p>
+                    </div>
+                  </div>
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleEditEntreprise(entreprise)}
@@ -130,7 +140,6 @@ const EntreprisesPage = () => {
                     </button>
                   </div>
                 </div>
-                <p className="text-sm text-gray-500">{entreprise.secteurActivite}</p>
               </div>
               
               <div className="p-4">

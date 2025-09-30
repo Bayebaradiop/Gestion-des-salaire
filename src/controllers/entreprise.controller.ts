@@ -184,4 +184,44 @@ export class EntrepriseController {
       next(error);
     }
   };
+
+  public uploadLogo = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      // Vérifier que req.params existe
+      if (!req.params) {
+        return res.status(400).json({
+          message: 'Paramètres de requête manquants'
+        });
+      }
+
+      const verifParams = entrepriseParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          message: 'Paramètres invalides',
+          errors: verifParams.error.format(),
+          receivedParams: req.params
+        });
+      }
+
+      if (!req.file) {
+        return res.status(400).json({
+          message: 'Aucun fichier logo fourni'
+        });
+      }
+
+      // Construire l'URL du logo
+      const logoUrl = `/uploads/${req.file.filename}`;
+      
+      // Mettre à jour l'entreprise avec le nouveau logo
+      const entreprise = await this.service.mettreAJourLogo(verifParams.data.id, logoUrl);
+      
+      res.json({
+        message: 'Logo uploadé avec succès',
+        logoUrl,
+        entreprise
+      });
+    } catch (error) {
+      next(error);
+    }
+  };
 }

@@ -20,7 +20,7 @@ datasource db {
 model Entreprise {
    id              Int      @id @default(autoincrement())
    nom             String
-   logo            String?
+   logo            String? @db.Text
    adresse         String?
    telephone       String?
    email           String?

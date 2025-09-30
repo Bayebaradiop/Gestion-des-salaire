@@ -55,6 +55,18 @@ class EntrepriseService {
   toggleStatutEntreprise(entrepriseId) {
     return authService.axios.patch(`/entreprises/${entrepriseId}/toggle-statut`);
   }
+
+  // Uploader un logo pour une entreprise
+  uploadLogoEntreprise(entrepriseId, logoFile) {
+    const formData = new FormData();
+    formData.append('logo', logoFile);
+
+    return authService.axios.post(`/entreprises/${entrepriseId}/logo`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
 }
 
 const entrepriseService = new EntrepriseService();

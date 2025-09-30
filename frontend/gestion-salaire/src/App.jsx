@@ -44,15 +44,13 @@ function App() {
             <Route path="/bulletins/:bulletinId" element={<BulletinDetailPage />} />
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/super-admin/entreprises/:entrepriseId" element={<SuperAdminEntrepriseDetailsPage />} />
-            {/* <Route path="/test" element={<TestPage />} /> */}
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Route>
         </Route>
       </Routes>
       
-      {/* Composant de débogage pour les modales */}
-      <DebugModal />
+      {/* <DebugModal /> */}
     </>
   );
 }

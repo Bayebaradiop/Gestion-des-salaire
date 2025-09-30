@@ -4,6 +4,7 @@ import { FaArrowLeft, FaUserPlus, FaUsers, FaUser, FaBuilding, FaEdit, FaTrash }
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import Button from '../components/ui/Button';
+import EntrepriseLogo from '../components/ui/EntrepriseLogo';
 import entrepriseService from '../services/entreprise.service';
 import employeService from '../services/employe.service';
 import authService from '../services/auth.service';
@@ -191,12 +192,18 @@ const SuperAdminEntrepriseDetailsPage = () => {
           >
             <FaArrowLeft className="mr-2" /> Retour
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <FaBuilding className="mr-3" />
-              {entreprise.nom}
-            </h1>
-            <p className="text-gray-600">{entreprise.email}</p>
+          <div className="flex items-center space-x-4">
+            <EntrepriseLogo 
+              entreprise={entreprise} 
+              size="lg"
+            />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+                <FaBuilding className="mr-3" />
+                {entreprise.nom}
+              </h1>
+              <p className="text-gray-600">{entreprise.email}</p>
+            </div>
           </div>
         </div>
       </div>

@@ -48,6 +48,9 @@ app.use(cookieParser());
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
 
+// Servir les fichiers uploadés (logos, etc.)
+app.use('/uploads', express.static('uploads'));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/entreprises', entrepriseRoutes);

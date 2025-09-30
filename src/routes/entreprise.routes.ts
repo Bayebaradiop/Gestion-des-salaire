@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { EntrepriseController } from '../controllers/entreprise.controller.js';
 import { AdminController } from '../controllers/admin.controller.js';
 import { authentifier, autoriserRoles } from '../middleware/auth.middleware.js';
+import { upload } from '../middleware/upload.middleware.js';
 
 const router = Router();
 const entrepriseController = new EntrepriseController();
@@ -70,6 +71,13 @@ router.delete('/:id/utilisateurs/:userId',
 router.patch('/:id/toggle-statut',
   autoriserRoles("SUPER_ADMIN"),
   entrepriseController.toggleStatut
+);
+
+// Route pour upload de logo d'entreprise
+router.post('/:id/logo',
+  autoriserRoles("SUPER_ADMIN", "ADMIN"),
+  upload.single('logo'),
+  entrepriseController.uploadLogo
 );
 
 export default router;

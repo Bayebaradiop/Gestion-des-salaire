@@ -189,4 +189,26 @@ export class EntrepriseService {
 
     return await this.entrepriseRepository.modifierUtilisateur(utilisateurId, donneesFinales);
   }
+
+  async mettreAJourLogo(entrepriseId: number, logoUrl: string): Promise<EntrepriseAvecStats> {
+    console.log(`🖼️ Mise à jour du logo pour l'entreprise ${entrepriseId} avec URL: ${logoUrl}`);
+    
+    // Vérifier que l'entreprise existe
+    const entrepriseExistante = await this.entrepriseRepository.trouverParId(entrepriseId);
+    if (!entrepriseExistante) {
+      throw new Error('Entreprise non trouvée');
+    }
+
+    // Mettre à jour le logo
+    const entrepriseModifiee = await this.entrepriseRepository.modifier(entrepriseId, { logo: logoUrl });
+    console.log(`✅ Logo mis à jour en base:`, entrepriseModifiee.logo);
+    
+    const stats = await this.entrepriseRepository.obtenirStatistiques(entrepriseId);
+
+    return {
+      ...entrepriseModifiee,
+      estActif: entrepriseModifiee.estActif,
+      ...stats
+    };
+  }
 }

@@ -7,6 +7,7 @@ import {
   FaCalendarAlt, FaCreditCard, FaFileInvoiceDollar
 } from 'react-icons/fa';
 import Button from '../components/ui/Button';
+import EntrepriseLogo from '../components/ui/EntrepriseLogo';
 import EntrepriseModal from '../components/modals/EntrepriseModal';
 import entrepriseService from '../services/entreprise.service';
 import { useNavigate } from 'react-router-dom';
@@ -337,10 +338,11 @@ const SuperAdminDashboard = () => {
                     <tr key={entreprise.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10">
-                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                              <FaBuilding className="text-blue-600" />
-                            </div>
+                          <div className="flex-shrink-0">
+                            <EntrepriseLogo 
+                              entreprise={entreprise} 
+                              size="sm"
+                            />
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">{entreprise.nom}</div>

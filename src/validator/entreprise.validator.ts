@@ -13,7 +13,16 @@ export const creerEntrepriseSchema = z.object({
     .trim(),
   
   logo: z.string()
-    .url("Le logo doit être une URL valide")
+    .refine(
+      (value) => {
+        if (!value) return true; // Optional
+        // Accepter les URLs complètes, les chemins relatifs ou les données base64
+        return value.startsWith('http') || 
+               value.startsWith('/uploads/') || 
+               value.startsWith('data:image/');
+      }, 
+      "Le logo doit être une URL valide, un chemin d'upload ou une image base64"
+    )
     .optional(),
   
   adresse: z.string()

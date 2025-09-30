@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
+import ImageUpload from '../ui/ImageUpload';
 import entrepriseService from '../../services/entreprise.service';
 
 const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
@@ -16,6 +17,7 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedLogoFile, setSelectedLogoFile] = useState(null);
 
   useEffect(() => {
     if (entreprise) {
@@ -61,8 +63,8 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
     if (!formData.devise || !/^[A-Z]{3}$/.test(formData.devise)) newErrors.devise = 'Devise invalide (ex: XOF, USD, EUR)';
     const periodesValides = ['MENSUELLE', 'HEBDOMADAIRE', 'JOURNALIERE'];
     if (!formData.periodePaie || !periodesValides.includes(formData.periodePaie)) newErrors.periodePaie = 'Période de paie invalide';
-    if (formData.logo && formData.logo.trim()) {
-      try { new URL(formData.logo); } 
+    if (formData.logo && typeof formData.logo === 'string' && formData.logo.trim()) {
+      try { new URL(formData.logo); }
       catch { newErrors.logo = 'URL du logo invalide'; }
     }
     setErrors(newErrors);
@@ -77,13 +79,21 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
 
     setIsSubmitting(true);
     try {
+      const dataToSend = { ...formData };
+      // Garder le logo dans les données pour la création/modification
+
+      let newEntreprise;
       if (entreprise) {
-        await entrepriseService.modifierEntreprise(entreprise.id, formData);
+        await entrepriseService.modifierEntreprise(entreprise.id, dataToSend);
         alert('Entreprise modifiée avec succès');
+        newEntreprise = { id: entreprise.id };
       } else {
-        await entrepriseService.creerEntreprise(formData);
+        newEntreprise = await entrepriseService.creerEntreprise(dataToSend);
         alert('Entreprise ajoutée avec succès');
       }
+
+      // Le logo est maintenant inclus directement dans la création/modification
+
       onSuccess?.();
       onClose();
     } catch (error) {
@@ -133,11 +143,15 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
           </div>
         </div>
 
-        <div>
-          <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-1">Logo (URL)</label>
-          <input type="url" id="logo" name="logo" value={formData.logo} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="https://example.com/logo.png" />
-          {renderError('logo')}
-        </div>
+        <ImageUpload
+          label="Logo de l'entreprise"
+          value={formData.logo}
+          onChange={(value) => setFormData(prev => ({ ...prev, logo: value }))}
+          onFileSelect={(file) => setSelectedLogoFile(file)}
+          onUpload={(logoUrl) => setFormData(prev => ({ ...prev, logo: logoUrl }))}
+          uploadEndpoint={entreprise ? `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/api/entreprises/${entreprise.id}/logo` : null}
+          className="mb-4"
+        />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

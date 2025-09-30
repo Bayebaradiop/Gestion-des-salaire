@@ -55,12 +55,24 @@ const AjoutEmployePage = () => {
       setIsSubmitting(true);
       const entrepriseId = user.entrepriseId || 1;
 
-      // Convertir les valeurs numériques avant envoi
+      // Préparer le payload en fonction du type de contrat
       const payload = {
         ...values,
-        salaireBase: values.salaireBase ? Number(values.salaireBase) : null,
-        tauxJournalier: values.tauxJournalier ? Number(values.tauxJournalier) : null
+        entrepriseId
       };
+
+      // Gérer les champs numériques selon le type de contrat
+      if (values.typeContrat === 'FIXE') {
+        payload.salaireBase = values.salaireBase ? Number(values.salaireBase) : 0;
+        // Pas de taux journalier pour les contrats fixes
+        delete payload.tauxJournalier;
+      } else if (values.typeContrat === 'JOURNALIER' || values.typeContrat === 'HONORAIRE') {
+        payload.tauxJournalier = values.tauxJournalier ? Number(values.tauxJournalier) : 0;
+        // Pas de salaire de base pour les contrats journaliers/honoraires
+        delete payload.salaireBase;
+      }
+
+      console.log('Payload envoyé:', payload); // Pour déboggage
 
       await employeService.creerEmploye(entrepriseId, payload);
       toast.success('Employé créé avec succès!');
@@ -69,6 +81,7 @@ const AjoutEmployePage = () => {
       console.error('Erreur:', error);
       toast.error(
         error.response?.data?.message ||
+        error.response?.data?.errors ||
         'Erreur lors de la création de l\'employé'
       );
     } finally {
@@ -106,7 +119,7 @@ const AjoutEmployePage = () => {
           validationSchema={EmployeSchema}
           onSubmit={handleSubmit}
         >
-          {({ errors, touched }) => (
+          {({ errors, touched, values }) => (
             <Form className="space-y-6">
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
@@ -191,25 +204,71 @@ const AjoutEmployePage = () => {
                     <option value="HONORAIRE">Honoraire</option>
                   </Field>
                   <ErrorMessage name="typeContrat" component="p" className="mt-1 text-sm text-red-600" />
+                  
+                  {/* Aide contextuelle selon le type de contrat */}
+                  {values.typeContrat && (
+                    <div className="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        {values.typeContrat === 'FIXE' && 
+                          '💼 Contrat fixe: Salaire mensuel régulier'}
+                        {values.typeContrat === 'JOURNALIER' && 
+                          '📅 Contrat journalier: Rémunération par jour travaillé'}
+                        {values.typeContrat === 'HONORAIRE' && 
+                          '💡 Honoraires: Tarif journalier pour prestations ponctuelles'}
+                      </p>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <label htmlFor="salaireBase" className="block text-sm font-medium text-gray-700 mb-1">
-                    Salaire de Base (XOF)*
-                  </label>
-                  <Field
-                    id="salaireBase"
-                    name="salaireBase"
-                    type="number"
-                    min="0"
-                    step="1000"
-                    className={`block w-full rounded-md shadow-sm sm:text-sm
-                      ${errors.salaireBase && touched.salaireBase 
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                  />
-                  <ErrorMessage name="salaireBase" component="p" className="mt-1 text-sm text-red-600" />
-                </div>
+                {/* Champ Salaire de Base - Affiché uniquement pour les contrats FIXE */}
+                {values.typeContrat === 'FIXE' && (
+                  <div>
+                    <label htmlFor="salaireBase" className="block text-sm font-medium text-gray-700 mb-1">
+                      Salaire de Base (XOF)*
+                    </label>
+                    <Field
+                      id="salaireBase"
+                      name="salaireBase"
+                      type="number"
+                      min="0"
+                      step="1000"
+                      placeholder="Ex: 150000"
+                      className={`block w-full rounded-md shadow-sm sm:text-sm
+                        ${errors.salaireBase && touched.salaireBase 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                    />
+                    <ErrorMessage name="salaireBase" component="p" className="mt-1 text-sm text-red-600" />
+                    <p className="mt-1 text-xs text-gray-500">Salaire mensuel fixe</p>
+                  </div>
+                )}
+
+                {/* Champ Taux Journalier - Affiché pour JOURNALIER et HONORAIRE */}
+                {(values.typeContrat === 'JOURNALIER' || values.typeContrat === 'HONORAIRE') && (
+                  <div>
+                    <label htmlFor="tauxJournalier" className="block text-sm font-medium text-gray-700 mb-1">
+                      Taux Journalier (XOF)*
+                    </label>
+                    <Field
+                      id="tauxJournalier"
+                      name="tauxJournalier"
+                      type="number"
+                      min="0"
+                      step="100"
+                      placeholder="Ex: 5000"
+                      className={`block w-full rounded-md shadow-sm sm:text-sm
+                        ${errors.tauxJournalier && touched.tauxJournalier 
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
+                          : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
+                    />
+                    <ErrorMessage name="tauxJournalier" component="p" className="mt-1 text-sm text-red-600" />
+                    <p className="mt-1 text-xs text-gray-500">
+                      {values.typeContrat === 'JOURNALIER' 
+                        ? 'Rémunération par jour travaillé' 
+                        : 'Tarif journalier pour les honoraires'}
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label htmlFor="dateEmbauche" className="block text-sm font-medium text-gray-700 mb-1">
@@ -225,25 +284,6 @@ const AjoutEmployePage = () => {
                         : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
                   />
                   <ErrorMessage name="dateEmbauche" component="p" className="mt-1 text-sm text-red-600" />
-                </div>
-
-                <div>
-                  <label htmlFor="tauxJournalier" className="block text-sm font-medium text-gray-700 mb-1">
-                    Taux Journalier (XOF)
-                  </label>
-                  <Field
-                    id="tauxJournalier"
-                    name="tauxJournalier"
-                    type="number"
-                    min="0"
-                    step="100"
-                    className={`block w-full rounded-md shadow-sm sm:text-sm
-                      ${errors.tauxJournalier && touched.tauxJournalier 
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-500' 
-                        : 'border-gray-300 focus:border-blue-500 focus:ring-blue-500'}`}
-                  />
-                  <ErrorMessage name="tauxJournalier" component="p" className="mt-1 text-sm text-red-600" />
-                  <p className="mt-1 text-xs text-gray-500">Requis pour les contrats journaliers</p>
                 </div>
 
                 <div>
