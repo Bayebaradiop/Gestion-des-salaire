@@ -16,6 +16,15 @@ export interface InscriptionDto {
   entrepriseId?: number; // Géré automatiquement selon le rôle de l'utilisateur connecté
 }
 
+export interface ModifierUtilisateurDto {
+  email: string;
+  prenom: string;
+  nom: string;
+  role: RoleUtilisateur;
+  estActif?: boolean;
+  motDePasse?: string;
+}
+
 export interface TokenPayload {
   id: number;
   email: string;

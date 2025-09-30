@@ -54,13 +54,21 @@ const AjoutEmployePage = () => {
     try {
       setIsSubmitting(true);
       const entrepriseId = user.entrepriseId || 1;
-      await employeService.creerEmploye(entrepriseId, values);
+
+      // Convertir les valeurs numériques avant envoi
+      const payload = {
+        ...values,
+        salaireBase: values.salaireBase ? Number(values.salaireBase) : null,
+        tauxJournalier: values.tauxJournalier ? Number(values.tauxJournalier) : null
+      };
+
+      await employeService.creerEmploye(entrepriseId, payload);
       toast.success('Employé créé avec succès!');
       navigate('/employes');
     } catch (error) {
       console.error('Erreur:', error);
       toast.error(
-        error.response?.data?.message || 
+        error.response?.data?.message ||
         'Erreur lors de la création de l\'employé'
       );
     } finally {

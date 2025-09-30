@@ -20,6 +20,7 @@ export interface ModifierEntrepriseData {
   email?: string;
   devise?: string;
   periodePaie?: PeriodePaie;
+  estActif?: boolean;
 }
 
 export interface StatistiquesEntreprise {
@@ -114,5 +115,64 @@ export class EntrepriseRepository extends BaseRepository {
 
     const count = await this.prisma.entreprise.count({ where });
     return count > 0;
+  }
+
+  async listerUtilisateurs(entrepriseId: number) {
+    return await this.prisma.utilisateur.findMany({
+      where: { entrepriseId },
+      select: {
+        id: true,
+        email: true,
+        prenom: true,
+        nom: true,
+        role: true,
+        estActif: true,
+        creeLe: true
+      },
+      orderBy: { creeLe: 'desc' }
+    });
+  }
+
+  async trouverUtilisateurParEmail(email: string) {
+    return await this.prisma.utilisateur.findUnique({
+      where: { email }
+    });
+  }
+
+  async trouverUtilisateurParId(id: number) {
+    return await this.prisma.utilisateur.findUnique({
+      where: { id }
+    });
+  }
+
+  async creerUtilisateur(donnees: any) {
+    return await this.prisma.utilisateur.create({
+      data: donnees,
+      select: {
+        id: true,
+        email: true,
+        prenom: true,
+        nom: true,
+        role: true,
+        estActif: true,
+        creeLe: true
+      }
+    });
+  }
+
+  async modifierUtilisateur(id: number, donnees: any) {
+    return await this.prisma.utilisateur.update({
+      where: { id },
+      data: donnees,
+      select: {
+        id: true,
+        email: true,
+        prenom: true,
+        nom: true,
+        role: true,
+        estActif: true,
+        misAJourLe: true
+      }
+    });
   }
 }

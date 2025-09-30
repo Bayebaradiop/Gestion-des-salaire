@@ -21,86 +21,90 @@ const Sidebar = () => {
         </div>
 
         <nav className="space-y-1">
-          <NavLink 
-            to="/dashboard" 
-            className={({ isActive }) => 
-              `flex items-center px-4 py-3 rounded-md transition-colors ${
-                isActive 
-                  ? 'bg-blue-50 text-blue-700' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`
-            }
-          >
-            <FaTachometerAlt className="mr-3" />
-            Tableau de bord
-          </NavLink>
+          {!isSuperAdmin && (
+            <>
+              <NavLink
+                to="/dashboard"
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <FaTachometerAlt className="mr-3" />
+                Tableau de bord
+              </NavLink>
 
-          <NavLink 
-            to="/dashboard/salaires" 
-            className={({ isActive }) => 
-              `flex items-center px-4 py-3 rounded-md transition-colors ${
-                isActive 
-                  ? 'bg-blue-50 text-blue-700' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`
-            }
-          >
-            <FaChartLine className="mr-3" />
-            Dashboard Salaires
-          </NavLink>
+              <NavLink
+                to="/dashboard/salaires"
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <FaChartLine className="mr-3" />
+                Dashboard Salaires
+              </NavLink>
 
-          <NavLink 
-            to="/employes" 
-            className={({ isActive }) => 
-              `flex items-center px-4 py-3 rounded-md transition-colors ${
-                isActive 
-                  ? 'bg-blue-50 text-blue-700' 
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`
-            }
-          >
-            <FaUsers className="mr-3" />
-            Employés
-          </NavLink>
+              <NavLink
+                to="/employes"
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <FaUsers className="mr-3" />
+                Employés
+              </NavLink>
 
-          {isAdmin && (
-            <NavLink 
-              to="/cycles" 
-              className={({ isActive }) => 
-                `flex items-center px-4 py-3 rounded-md transition-colors ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`
-              }
-            >
-              <FaMoneyBillWave className="mr-3" />
-              Cycles de Paie
-            </NavLink>
+              {isAdmin && (
+                <NavLink
+                  to="/cycles"
+                  className={({ isActive }) =>
+                    `flex items-center px-4 py-3 rounded-md transition-colors ${
+                      isActive
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`
+                  }
+                >
+                  <FaMoneyBillWave className="mr-3" />
+                  Cycles de Paie
+                </NavLink>
+              )}
+            </>
           )}
 
           {isSuperAdmin && (
-            <NavLink 
-              to="/entreprises" 
-              className={({ isActive }) => 
+            <NavLink
+              to="/super-admin"
+              className={({ isActive }) =>
                 `flex items-center px-4 py-3 rounded-md transition-colors ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-700' 
+                  isActive
+                    ? 'bg-blue-50 text-blue-700'
                     : 'text-gray-700 hover:bg-gray-100'
                 }`
               }
             >
               <FaBuilding className="mr-3" />
-              Entreprises
+              Gestion Entreprises
             </NavLink>
           )}
 
-          <NavLink 
-            to="/parametres" 
-            className={({ isActive }) => 
+          <NavLink
+            to="/parametres"
+            className={({ isActive }) =>
               `flex items-center px-4 py-3 rounded-md transition-colors ${
-                isActive 
-                  ? 'bg-blue-50 text-blue-700' 
+                isActive
+                  ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`
             }

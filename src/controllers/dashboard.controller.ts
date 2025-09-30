@@ -83,14 +83,5 @@ export class DashboardController {
     }
   };
 
-  // Initialiser les données
-  public initialiserDonnees = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const entrepriseId = parseInt(req.body.entrepriseId);
-      await this.service.initialiserDonnees(entrepriseId);
-      res.json({ message: 'Données initialisées avec succès' });
-    } catch (error) {
-      next(error);
-    }
-  };
+
 }

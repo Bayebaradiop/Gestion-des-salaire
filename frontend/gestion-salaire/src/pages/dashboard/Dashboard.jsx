@@ -8,6 +8,7 @@ import ConfirmationModal from '../../components/modals/ConfirmationModal';
 import SimpleFormModal from '../../components/modals/SimpleFormModal';
 import { FaUsers, FaMoneyBillWave, FaChartLine, FaBuilding } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import dashboardService from '../../services/dashboard.service';
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, Legend, CartesianGrid,
   BarChart, Bar,
@@ -29,37 +30,119 @@ const DashboardSalaire = () => {
 
   const [data, setData] = useState([]);
 
+  const DEFAULT_STATS = {
+    employesActifs: 0,
+    employesTotal: 0,
+    cyclesEnCours: 0,
+    bulletinsEnAttente: 0
+  };
+
+  const DEFAULT_GRAPH_DATA = [
+    { mois: 'Avr', masse: 0, paye: 0, restant: 0 },
+    { mois: 'Mai', masse: 0, paye: 0, restant: 0 },
+    { mois: 'Juin', masse: 0, paye: 0, restant: 0 },
+    { mois: 'Juil', masse: 0, paye: 0, restant: 0 },
+    { mois: 'Août', masse: 0, paye: 0, restant: 0 },
+    { mois: 'Sep', masse: 0, paye: 0, restant: 0 },
+  ];
+
   useEffect(() => {
-    // Simuler le chargement des statistiques
-    const fetchStats = async () => {
+    const loadDashboard = async () => {
+      if (!user?.entrepriseId) {
+        setStats(DEFAULT_STATS);
+        setData(DEFAULT_GRAPH_DATA);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      const entrepriseId = user.entrepriseId;
+
       try {
-        setTimeout(() => {
+        // 1) Vérifier si des données existent, sinon initialiser
+        const hasData = await dashboardService.checkDataExists(entrepriseId);
+        if (!hasData) {
+          await dashboardService.initializeData(entrepriseId);
+          toast.success('Données initialisées pour votre entreprise');
+        }
+
+        // 2) Essayer de récupérer toutes les données en un appel
+        try {
+          const { data: all } = await dashboardService.getDashboardData(entrepriseId);
+          if (all) {
+            const mapped = (all.graphData || []).map((g) => ({
+              mois: g.mois,
+              masse: g.masseSalariale ?? 0,
+              paye: g.montantPaye ?? 0,
+              restant: g.montantRestant ?? 0,
+            }));
+            setData(mapped.length ? mapped : DEFAULT_GRAPH_DATA);
+
+            const s = all.stats || {};
+            setStats({
+              employesActifs: s.employesActifs ?? 0,
+              employesTotal: s.employesTotal ?? 0,
+              cyclesEnCours: s.cyclesEnCours ?? 0,
+              bulletinsEnAttente: s.bulletinsEnAttente ?? 0,
+            });
+            setLoading(false);
+            return;
+          }
+        } catch (e) {
+          // continue to fallback
+        }
+
+        // 3) Fallback: récupérer séparément stats et graph
+        const [statsRes, evoRes, nextPayRes] = await Promise.allSettled([
+          dashboardService.getStats(entrepriseId),
+          dashboardService.getGraphData(entrepriseId),
+          dashboardService.getNextPayments(entrepriseId, 50),
+        ]);
+
+        // Graph data
+        if (evoRes.status === 'fulfilled') {
+          const evo = evoRes.value.data || [];
+          const mapped = evo.map((m) => ({
+            mois: m.mois,
+            masse: m.montant ?? 0,
+            paye: Math.floor((m.montant ?? 0) * 0.8),
+            restant: Math.max(0, (m.montant ?? 0) - Math.floor((m.montant ?? 0) * 0.8)),
+          }));
+          setData(mapped.length ? mapped : DEFAULT_GRAPH_DATA);
+        } else {
+          setData(DEFAULT_GRAPH_DATA);
+        }
+
+        // Stats
+        let bulletinsEnAttente = 0;
+        if (nextPayRes.status === 'fulfilled') {
+          bulletinsEnAttente = Array.isArray(nextPayRes.value.data) ? nextPayRes.value.data.length : 0;
+        }
+
+        if (statsRes.status === 'fulfilled') {
+          const kpis = statsRes.value.data || {};
           setStats({
-            employesActifs: 42,
-            employesTotal: 45,
-            cyclesEnCours: 1,
-            bulletinsEnAttente: 12
+            employesActifs: kpis.nombreEmployesActifs ?? 0,
+            employesTotal: kpis.nombreEmployes ?? 0,
+            cyclesEnCours: 0, // non fourni par cette route
+            bulletinsEnAttente,
           });
-          setLoading(false);
-        }, 1000);
+        } else {
+          setStats({ ...DEFAULT_STATS, bulletinsEnAttente });
+        }
+
       } catch (error) {
-        toast.error('Erreur lors du chargement des statistiques');
+        console.error(error);
+        toast.error("Erreur lors du chargement du tableau de bord");
+        setStats(DEFAULT_STATS);
+        setData(DEFAULT_GRAPH_DATA);
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchStats();
-
-    // Données mock pour les graphiques
-    setData([
-      { mois: 'Avril', masse: 5000, paye: 4000, restant: 1000 },
-      { mois: 'Mai', masse: 5500, paye: 4500, restant: 1000 },
-      { mois: 'Juin', masse: 6000, paye: 4800, restant: 1200 },
-      { mois: 'Juillet', masse: 6200, paye: 5000, restant: 1200 },
-      { mois: 'Août', masse: 6500, paye: 5500, restant: 1000 },
-      { mois: 'Septembre', masse: 7000, paye: 6000, restant: 1000 },
-    ]);
-  }, []);
+    loadDashboard();
+  }, [user]);
 
   if (loading) {
     return (

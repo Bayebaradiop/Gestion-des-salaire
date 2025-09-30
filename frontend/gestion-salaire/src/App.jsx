@@ -9,6 +9,8 @@ import CyclesPage from './pages/cycles/CyclesPage';
 import CreerCyclePage from './pages/cycles/CreerCyclePage';
 import BulletinsPage from './pages/cycles/BulletinsPage';
 import BulletinDetailPage from './pages/cycles/BulletinDetailPage';
+import SuperAdminDashboard from './pages/SuperAdminDashboard';
+import SuperAdminEntrepriseDetailsPage from './pages/SuperAdminEntrepriseDetailsPage';
 // import TestPage from './pages/TestPage';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
@@ -40,6 +42,8 @@ function App() {
             <Route path="/cycles/creer" element={<CreerCyclePage />} />
             <Route path="/cycles/:cycleId/bulletins" element={<BulletinsPage />} />
             <Route path="/bulletins/:bulletinId" element={<BulletinDetailPage />} />
+            <Route path="/super-admin" element={<SuperAdminDashboard />} />
+            <Route path="/super-admin/entreprises/:entrepriseId" element={<SuperAdminEntrepriseDetailsPage />} />
             {/* <Route path="/test" element={<TestPage />} /> */}
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />

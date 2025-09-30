@@ -10,6 +10,15 @@ export interface CreerUtilisateurData {
   entrepriseId?: number;
 }
 
+export interface MettreAJourUtilisateurData {
+  email?: string;
+  motDePasse?: string;
+  prenom?: string;
+  nom?: string;
+  role?: RoleUtilisateur;
+  estActif?: boolean;
+}
+
 export interface UtilisateurAvecEntreprise extends Utilisateur {
   entreprise?: {
     id: number;
@@ -81,6 +90,25 @@ export class AuthRepository extends BaseRepository {
         misAJourLe: true,
         entrepriseId: true
       }
+    });
+  }
+
+  async mettreAJour(id: number, donnees: MettreAJourUtilisateurData): Promise<Utilisateur> {
+    return await this.prisma.utilisateur.update({
+      where: { id },
+      data: donnees
+    });
+  }
+
+  async compterParRole(role: RoleUtilisateur): Promise<number> {
+    return await this.prisma.utilisateur.count({
+      where: { role }
+    });
+  }
+
+  async supprimer(id: number): Promise<void> {
+    await this.prisma.utilisateur.delete({
+      where: { id }
     });
   }
 }

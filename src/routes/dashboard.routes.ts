@@ -45,9 +45,9 @@ router.get('/entreprises/:entrepriseId/dashboard/check-data',
 );
 
 // POST /dashboard/initialize - Initialiser les données
-router.post('/dashboard/initialize',
-  autoriserRoles("SUPER_ADMIN", "ADMIN"),
-  (req, res, next) => dashboardController.initialiserDonnees(req, res, next)
-);
+// router.post('/dashboard/initialize',
+//   autoriserRoles("SUPER_ADMIN", "ADMIN"),
+//   (req, res, next) => dashboardController.initialiserDonnees(req, res, next)
+// );
 
 export default router;

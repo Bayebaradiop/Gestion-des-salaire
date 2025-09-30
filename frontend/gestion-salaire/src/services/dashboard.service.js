@@ -1,6 +1,15 @@
 import axios from 'axios';
 import { API_URL } from '../config';
 
+// Créer une instance axios avec credentials pour inclure les cookies HTTP-only
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 /**
  * Service pour gérer les données du tableau de bord
  */
@@ -11,7 +20,7 @@ const dashboardService = {
    * @returns {Promise} - Promesse contenant les statistiques
    */
   async getStats(entrepriseId) {
-    return axios.get(`${API_URL}/entreprises/${entrepriseId}/dashboard/kpis`);
+    return api.get(`/entreprises/${entrepriseId}/dashboard/kpis`);
   },
 
   /**
@@ -21,7 +30,7 @@ const dashboardService = {
    * @returns {Promise} - Promesse contenant les données
    */
   async getGraphData(entrepriseId, months = 6) {
-    return axios.get(`${API_URL}/entreprises/${entrepriseId}/dashboard/evolution-masse-salariale`);
+    return api.get(`/entreprises/${entrepriseId}/dashboard/evolution-masse-salariale`);
   },
 
   /**
@@ -31,7 +40,7 @@ const dashboardService = {
    */
   async checkDataExists(entrepriseId) {
     try {
-      const response = await axios.get(`${API_URL}/entreprises/${entrepriseId}/dashboard/check-data`);
+  const response = await api.get(`/entreprises/${entrepriseId}/dashboard/check-data`);
       return response.data.hasData;
     } catch (error) {
       console.error("Erreur lors de la vérification des données:", error);
@@ -45,7 +54,7 @@ const dashboardService = {
    * @returns {Promise} - Promesse confirmant l'initialisation
    */
   async initializeData(entrepriseId) {
-    return axios.post(`${API_URL}/dashboard/initialize`, { entrepriseId });
+    return api.post(`/dashboard/initialize`, { entrepriseId });
   },
 
   /**
@@ -55,7 +64,7 @@ const dashboardService = {
    * @returns {Promise} - Promesse contenant les paiements
    */
   async getNextPayments(entrepriseId, limit = 5) {
-    return axios.get(`${API_URL}/entreprises/${entrepriseId}/dashboard/prochains-paiements`, {
+    return api.get(`/entreprises/${entrepriseId}/dashboard/prochains-paiements`, {
       params: { limit }
     });
   },
@@ -66,7 +75,7 @@ const dashboardService = {
    * @returns {Promise} - Promesse contenant toutes les données
    */
   async getDashboardData(entrepriseId) {
-    return axios.get(`${API_URL}/entreprises/${entrepriseId}/dashboard/all-data`);
+    return api.get(`/entreprises/${entrepriseId}/dashboard/all-data`);
   }
 };
 

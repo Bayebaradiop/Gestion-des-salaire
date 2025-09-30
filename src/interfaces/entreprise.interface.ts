@@ -20,6 +20,7 @@ export interface ModifierEntrepriseDto {
   email?: string;
   devise?: string;
   periodePaie?: PeriodePaie;
+  estActif?: boolean;
 }
 
 export interface EntrepriseAvecStats {
@@ -31,9 +32,10 @@ export interface EntrepriseAvecStats {
   email?: string | null;
   devise: string;
   periodePaie: PeriodePaie;
+  estActif: boolean;
   creeLe: Date;
   misAJourLe: Date;
-  
+
   // Statistiques
   nombreEmployes: number;
   nombreEmployesActifs: number;

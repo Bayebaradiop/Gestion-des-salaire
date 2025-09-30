@@ -1,6 +1,11 @@
 import authService from './auth.service';
 
 class EmployeService {
+  // Obtenir la liste des employés d'une entreprise
+  getEmployesByEntreprise(entrepriseId) {
+    return authService.axios.get(`/entreprises/${entrepriseId}/employes`);
+  }
+
   // Obtenir la liste des employés avec filtres optionnels
   getEmployes(entrepriseId, filters = {}) {
     let url = `/entreprises/${entrepriseId}/employes`;

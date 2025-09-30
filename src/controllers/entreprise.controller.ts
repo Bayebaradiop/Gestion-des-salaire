@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from 'express';
 import { EntrepriseService } from '../services/entreprise.service.js';
 import { creerEntrepriseSchema, modifierEntrepriseSchema, entrepriseParamsSchema } from '../validator/entreprise.validator.js';
+import { createUserValidator, updateUserValidator } from '../validator/user.validator.js';
 
 export class EntrepriseController {
   private service: EntrepriseService;
@@ -90,6 +91,95 @@ export class EntrepriseController {
     try {
       const stats = await this.service.obtenirStatistiques(parseInt(req.params.id));
       res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public listerUtilisateurs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const verifParams = entrepriseParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          errors: verifParams.error.format()
+        });
+      }
+
+      const utilisateurs = await this.service.listerUtilisateurs(verifParams.data.id);
+      res.json(utilisateurs);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public toggleStatut = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const verifParams = entrepriseParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          errors: verifParams.error.format()
+        });
+      }
+
+      const entreprise = await this.service.toggleStatut(verifParams.data.id);
+      res.json(entreprise);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public creerUtilisateur = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const verifParams = entrepriseParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          message: 'Paramètres invalides',
+          errors: verifParams.error.issues
+        });
+      }
+
+      const verifBody = createUserValidator.safeParse(req.body);
+      if (!verifBody.success) {
+        return res.status(400).json({
+          message: 'Données invalides',
+          errors: verifBody.error.issues
+        });
+      }
+
+      const utilisateur = await this.service.creerUtilisateur(verifParams.data.id, verifBody.data);
+      res.status(201).json(utilisateur);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public modifierUtilisateur = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const verifParams = entrepriseParamsSchema.safeParse(req.params);
+      if (!verifParams.success) {
+        return res.status(400).json({
+          message: 'Paramètres invalides',
+          errors: verifParams.error.issues
+        });
+      }
+
+      const userId = parseInt(req.params.userId);
+      if (isNaN(userId)) {
+        return res.status(400).json({
+          message: 'ID utilisateur invalide'
+        });
+      }
+
+      const verifBody = updateUserValidator.safeParse(req.body);
+      if (!verifBody.success) {
+        return res.status(400).json({
+          message: 'Données invalides',
+          errors: verifBody.error.issues
+        });
+      }
+
+      const utilisateur = await this.service.modifierUtilisateur(verifParams.data.id, userId, verifBody.data);
+      res.json(utilisateur);
     } catch (error) {
       next(error);
     }

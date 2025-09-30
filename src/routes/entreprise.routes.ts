@@ -48,4 +48,28 @@ router.post('/:id/utilisateurs',
   adminController.creerUtilisateurPourEntreprise
 );
 
+// Route pour lister les utilisateurs d'une entreprise (SUPER_ADMIN seulement)
+router.get('/:id/utilisateurs',
+  autoriserRoles("SUPER_ADMIN"),
+  entrepriseController.listerUtilisateurs
+);
+
+// Route pour modifier un utilisateur d'une entreprise (SUPER_ADMIN seulement)
+router.put('/:id/utilisateurs/:userId',
+  autoriserRoles("SUPER_ADMIN"),
+  adminController.modifierUtilisateurPourEntreprise
+);
+
+// Route pour supprimer un utilisateur d'une entreprise (SUPER_ADMIN seulement)
+router.delete('/:id/utilisateurs/:userId',
+  autoriserRoles("SUPER_ADMIN"),
+  adminController.supprimerUtilisateurPourEntreprise
+);
+
+// Route pour activer/désactiver une entreprise (SUPER_ADMIN seulement)
+router.patch('/:id/toggle-statut',
+  autoriserRoles("SUPER_ADMIN"),
+  entrepriseController.toggleStatut
+);
+
 export default router;

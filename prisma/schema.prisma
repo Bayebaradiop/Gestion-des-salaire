@@ -18,23 +18,24 @@ datasource db {
 // ================================
 
 model Entreprise {
-  id              Int      @id @default(autoincrement())
-  nom             String
-  logo            String?
-  adresse         String?
-  telephone       String?
-  email           String?
-  devise          String   @default("XOF") // Devise par défaut
-  periodePaie     PeriodePaie @default(MENSUELLE) // Période de paie
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
+   id              Int      @id @default(autoincrement())
+   nom             String
+   logo            String?
+   adresse         String?
+   telephone       String?
+   email           String?
+   devise          String   @default("XOF") // Devise par défaut
+   periodePaie     PeriodePaie @default(MENSUELLE) // Période de paie
+   estActif        Boolean  @default(true) // Statut actif/inactif
+   creeLe          DateTime @default(now())
+   misAJourLe      DateTime @updatedAt
 
-  // Relations
-  utilisateurs    Utilisateur[]
-  employes        Employe[]
-  cyclesPaie      CyclePaie[]
+   // Relations
+   utilisateurs    Utilisateur[]
+   employes        Employe[]
+   cyclesPaie      CyclePaie[]
 
-  @@map("entreprises")
+   @@map("entreprises")
 }
 
 model Utilisateur {

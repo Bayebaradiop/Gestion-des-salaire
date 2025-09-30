@@ -1,7 +1,7 @@
 import jsonwebtoken from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import type { Response } from 'express';
-import type { ConnexionDto, InscriptionDto, TokenPayload, ReponseAuth } from '../interfaces/auth.interface.js';
+import type { ConnexionDto, InscriptionDto, ModifierUtilisateurDto, TokenPayload, ReponseAuth } from '../interfaces/auth.interface.js';
 import { AuthRepository } from '../repositories/auth.repository.js';
 import { EntrepriseRepository } from '../repositories/entreprise.repository.js';
 
@@ -149,7 +149,7 @@ export class AuthService {
   async obtenirProfil(id: number): Promise<{ utilisateur: Omit<ReponseAuth['utilisateur'], never> } | null> {
     try {
       const utilisateur = await this.authRepository.trouverParId(id);
-      
+
       if (!utilisateur) {
         return null;
       }
@@ -166,6 +166,85 @@ export class AuthService {
       };
     } catch (error) {
       console.error('Erreur lors de la récupération du profil:', error);
+      throw error;
+    }
+  }
+
+  async modifierUtilisateur(id: number, donnees: ModifierUtilisateurDto): Promise<ReponseAuth['utilisateur']> {
+    try {
+      const utilisateurExistant = await this.authRepository.trouverParId(id);
+
+      if (!utilisateurExistant) {
+        throw new Error('Utilisateur non trouvé');
+      }
+
+      // Vérifier si l'email est déjà utilisé par un autre utilisateur
+      if (donnees.email !== utilisateurExistant.email) {
+        const emailExistant = await this.authRepository.trouverParEmail(donnees.email);
+        if (emailExistant) {
+          throw new Error('Un utilisateur avec cet email existe déjà');
+        }
+      }
+
+      // Validation des rôles et entreprises
+      if (donnees.role === 'SUPER_ADMIN' && utilisateurExistant.entrepriseId) {
+        throw new Error('Un SUPER_ADMIN ne doit pas être lié à une entreprise');
+      }
+
+      if ((donnees.role === 'ADMIN' || donnees.role === 'CAISSIER') && !utilisateurExistant.entrepriseId) {
+        throw new Error('Une entreprise est requise pour ce rôle');
+      }
+
+      // Préparer les données de mise à jour
+      const donneesMaj: any = {
+        email: donnees.email,
+        nom: donnees.nom,
+        prenom: donnees.prenom,
+        role: donnees.role,
+        estActif: donnees.estActif !== undefined ? donnees.estActif : utilisateurExistant.estActif
+      };
+
+      // Hacher le mot de passe si fourni
+      if (donnees.motDePasse) {
+        donneesMaj.motDePasse = await bcrypt.hash(donnees.motDePasse, 12);
+      }
+
+      // Mettre à jour l'utilisateur
+      const utilisateurMaj = await this.authRepository.mettreAJour(id, donneesMaj);
+
+      return {
+        id: utilisateurMaj.id,
+        email: utilisateurMaj.email,
+        nom: utilisateurMaj.nom,
+        prenom: utilisateurMaj.prenom,
+        role: utilisateurMaj.role,
+        entrepriseId: utilisateurMaj.entrepriseId || undefined
+      };
+    } catch (error) {
+      console.error('Erreur lors de la modification de l\'utilisateur:', error);
+      throw error;
+    }
+  }
+
+  async supprimerUtilisateur(id: number): Promise<void> {
+    try {
+      const utilisateur = await this.authRepository.trouverParId(id);
+
+      if (!utilisateur) {
+        throw new Error('Utilisateur non trouvé');
+      }
+
+      // Vérifier que ce n'est pas le dernier SUPER_ADMIN
+      if (utilisateur.role === 'SUPER_ADMIN') {
+        const superAdmins = await this.authRepository.compterParRole('SUPER_ADMIN');
+        if (superAdmins <= 1) {
+          throw new Error('Impossible de supprimer le dernier SUPER_ADMIN');
+        }
+      }
+
+      await this.authRepository.supprimer(id);
+    } catch (error) {
+      console.error('Erreur lors de la suppression de l\'utilisateur:', error);
       throw error;
     }
   }
