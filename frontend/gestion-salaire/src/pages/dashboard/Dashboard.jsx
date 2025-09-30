@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
-import Modal from '../../components/ui/Modal';
+
 import ConfirmationModal from '../../components/modals/ConfirmationModal';
 import SimpleFormModal from '../../components/modals/SimpleFormModal';
 import { FaUsers, FaMoneyBillWave, FaChartLine, FaBuilding } from 'react-icons/fa';
@@ -24,7 +24,6 @@ const DashboardSalaire = () => {
     bulletinsEnAttente: 0
   });
   const [loading, setLoading] = useState(true);
-  const [isTestModalOpen, setIsTestModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 
@@ -294,13 +293,13 @@ const DashboardSalaire = () => {
         </Card>
       </div>
 
-      {/* Modals (test, confirmation, formulaire) */}
+      {/* Modals (test, confirmation, formulaire)
       <Modal isOpen={isTestModalOpen} onClose={() => setIsTestModalOpen(false)} title="Modal de Test" size="md">
         <div className="space-y-4">
           <p>✅ Les modales fonctionnent maintenant correctement!</p>
           <Button variant="primary" onClick={() => setIsTestModalOpen(false)} className="w-full">❌ Fermer</Button>
         </div>
-      </Modal>
+      </Modal> */}
 
       <ConfirmationModal
         isOpen={isConfirmModalOpen}

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import entrepriseService from '../../services/entreprise.service';
-import { createUserSchema, updateUserSchema } from '../../validators/user.validator';
 
 const UserModal = ({ isOpen, onClose, user = null, entrepriseId, onSuccess }) => {
   const [formData, setFormData] = useState({

@@ -14,10 +14,9 @@ import SuperAdminEntrepriseDetailsPage from './pages/SuperAdminEntrepriseDetails
 // import TestPage from './pages/TestPage';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
-import DebugModal from './components/debug/DebugModal';
 
 function App() {
-  const { user, loading } = useAuth();
+  const { user, loading, isSuperAdmin } = useAuth();
 
   if (loading) {
     return (
@@ -30,7 +29,7 @@ function App() {
   return (
     <>
       <Routes>
-        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
+        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={isSuperAdmin ? '/super-admin' : '/dashboard'} />} />
         
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
@@ -45,14 +44,13 @@ function App() {
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/super-admin/entreprises/:entrepriseId" element={<SuperAdminEntrepriseDetailsPage />} />
             {/* <Route path="/test" element={<TestPage />} /> */}
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            <Route path="/" element={<Navigate to={isSuperAdmin ? '/super-admin' : '/dashboard'} />} />
+            <Route path="*" element={<Navigate to={isSuperAdmin ? '/super-admin' : '/dashboard'} />} />
           </Route>
         </Route>
       </Routes>
       
       {/* Composant de débogage pour les modales */}
-      <DebugModal />
     </>
   );
 }
