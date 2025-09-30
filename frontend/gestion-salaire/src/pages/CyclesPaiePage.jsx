@@ -1,22 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
+import React, { useState } from 'react';
 import { FaPlus, FaEdit, FaTrash, FaFileAlt, FaCheck, FaLock } from 'react-icons/fa';
 import Button from '../components/ui/Button';
 import CyclePaieModal from '../components/modals/CyclePaieModal';
-import cyclePaieService from '../services/cyclePaie.service';
-import entrepriseService from '../services/entreprise.service';
+import { useCyclePaie } from '../context/cyclepaiContext';
 import { useAuth } from '../context/AuthContext';
 import { formatDate } from '../utils/date';
 
 const CyclesPaiePage = () => {
   const { user } = useAuth();
-  const entrepriseId = user?.entrepriseId;
   const isAdmin = user?.role === 'ADMIN';
 
-  const [cycles, setCycles] = useState([]);
-  const [entreprises, setEntreprises] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedCycle, setSelectedCycle] = useState(null);
+  const {
+    cycles,
+    entreprises,
+    isLoading,
+    selectedCycle,
+    fetchCycles,
+    deleteCycle,
+    generateBulletins,
+    approveCycle,
+    closeCycle,
+    setSelectedCycle
+  } = useCyclePaie();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Obtenir les noms des mois
@@ -27,37 +33,6 @@ const CyclesPaiePage = () => {
     ];
     return moisNames[mois - 1] || 'Inconnu';
   };
-
-  // Charger les données initiales
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Chargement des cycles de paie
-        if (isAdmin) {
-          // Si admin, charger toutes les entreprises
-          const entreprisesResponse = await entrepriseService.getEntreprises();
-          setEntreprises(entreprisesResponse.data);
-          
-          // Et tous les cycles de paie
-          const cyclesResponse = await cyclePaieService.getCyclesPaie();
-          setCycles(cyclesResponse.data);
-        } else {
-          // Si utilisateur normal, charger seulement les cycles de son entreprise
-          const cyclesResponse = await cyclePaieService.getCyclesPaie(entrepriseId);
-          setCycles(cyclesResponse.data);
-        }
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-        toast.error('Impossible de charger les données');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [entrepriseId, isAdmin]);
 
   // Ouvrir le modal pour ajouter un cycle
   const handleAddCycle = () => {
@@ -72,81 +47,29 @@ const CyclesPaiePage = () => {
   };
 
   // Supprimer un cycle
-  const handleDeleteCycle = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce cycle de paie ?')) {
-      try {
-        await cyclePaieService.supprimerCycle(id);
-        toast.success('Cycle de paie supprimé avec succès');
-        // Mettre à jour la liste des cycles
-        setCycles(cycles.filter(c => c.id !== id));
-      } catch (error) {
-        console.error('Erreur lors de la suppression du cycle:', error);
-        toast.error('Impossible de supprimer ce cycle de paie');
-      }
-    }
+  const handleDeleteCycle = (id) => {
+    deleteCycle(id);
   };
 
   // Générer les bulletins pour un cycle
-  const handleGenererBulletins = async (id) => {
-    try {
-      await cyclePaieService.genererBulletins(id);
-      toast.success('Les bulletins de paie ont été générés avec succès');
-      // Mettre à jour le cycle dans la liste
-      const updatedCycles = cycles.map(c => 
-        c.id === id ? { ...c, bulletinsGeneres: true } : c
-      );
-      setCycles(updatedCycles);
-    } catch (error) {
-      console.error('Erreur lors de la génération des bulletins:', error);
-      toast.error('Impossible de générer les bulletins de paie');
-    }
+  const handleGenererBulletins = (id) => {
+    generateBulletins(id);
   };
 
   // Approuver un cycle
-  const handleApprouverCycle = async (id) => {
-    try {
-      await cyclePaieService.approuverCycle(id);
-      toast.success('Le cycle de paie a été approuvé avec succès');
-      // Mettre à jour le cycle dans la liste
-      const updatedCycles = cycles.map(c => 
-        c.id === id ? { ...c, estApprouve: true } : c
-      );
-      setCycles(updatedCycles);
-    } catch (error) {
-      console.error('Erreur lors de l\'approbation du cycle:', error);
-      toast.error('Impossible d\'approuver ce cycle de paie');
-    }
+  const handleApprouverCycle = (id) => {
+    approveCycle(id);
   };
 
   // Clôturer un cycle
-  const handleCloturerCycle = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir clôturer ce cycle de paie ? Cette action est irréversible.')) {
-      try {
-        await cyclePaieService.cloturerCycle(id);
-        toast.success('Le cycle de paie a été clôturé avec succès');
-        // Mettre à jour le cycle dans la liste
-        const updatedCycles = cycles.map(c => 
-          c.id === id ? { ...c, estCloture: true } : c
-        );
-        setCycles(updatedCycles);
-      } catch (error) {
-        console.error('Erreur lors de la clôture du cycle:', error);
-        toast.error('Impossible de clôturer ce cycle de paie');
-      }
-    }
+  const handleCloturerCycle = (id) => {
+    closeCycle(id);
   };
 
   // Après une action réussie (création ou modification)
-  const handleSuccess = async () => {
-    try {
-      // Recharger la liste des cycles
-      const response = isAdmin 
-        ? await cyclePaieService.getCyclesPaie()
-        : await cyclePaieService.getCyclesPaie(entrepriseId);
-      setCycles(response.data);
-    } catch (error) {
-      console.error('Erreur lors du rechargement des cycles:', error);
-    }
+  const handleSuccess = () => {
+    fetchCycles();
+    setIsModalOpen(false);
   };
 
   // Trouver le nom de l'entreprise pour un cycle

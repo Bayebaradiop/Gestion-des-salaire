@@ -2,15 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { FaArrowLeft, FaUserPlus, FaUsers, FaUser, FaBuilding, FaEdit, FaTrash } from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import Button from '../components/ui/Button';
-import EntrepriseLogo from '../components/ui/EntrepriseLogo';
-import entrepriseService from '../services/entreprise.service';
-import employeService from '../services/employe.service';
-import authService from '../services/auth.service';
-import UserModal from '../components/modals/UserModal';
-import EmployeModalSuperAdmin from '../components/modals/EmployeModalSuperAdmin';
-import ConfirmationModal from '../components/modals/ConfirmationModal';
+import { useAuth } from '../../hooks/useAuth';
+import Button from '../../components/ui/Button';
+import EntrepriseLogo from '../../components/ui/EntrepriseLogo';
+import entrepriseService from '../../services/entreprise.service';
+import employeService from '../../services/employe.service';
+import authService from '../../services/auth.service';
+import UserModal from '../../components/modals/UserModal';
+import EmployeModalSuperAdmin from '../../components/modals/EmployeModalSuperAdmin';
+import ConfirmationModal from '../../components/modals/ConfirmationModal';
 
 const SuperAdminEntrepriseDetailsPage = () => {
   const { entrepriseId } = useParams();

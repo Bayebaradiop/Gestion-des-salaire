@@ -1,56 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
+import React, { useState } from 'react';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 import Button from '../components/ui/Button';
 import EmployeModal from '../components/modals/EmployeModal';
-import employeService from '../services/employe.service';
-import entrepriseService from '../services/entreprise.service';
+import { useEmploye } from '../context/EmployerContext';
 import { useAuth } from '../context/AuthContext';
 
 const EmployesPage = () => {
   const { user } = useAuth();
   const entrepriseId = user?.entrepriseId;
 
-  const [employes, setEmployes] = useState([]);
-  const [entreprises, setEntreprises] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    employes,
+    entreprises,
+    isLoading,
+    createEmploye,
+    updateEmploye,
+    deleteEmploye,
+    fetchEmployes
+  } = useEmploye();
+
   const [selectedEmploye, setSelectedEmploye] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Charger la liste des employés et des entreprises
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Récupération des employés
-        let employesData = [];
-        if (entrepriseId) {
-          // Si l'utilisateur est associé à une entreprise, récupérer seulement les employés de celle-ci
-          const response = await employeService.getEmployes(entrepriseId);
-          employesData = response.data;
-        } else {
-          // Si admin, récupérer toutes les entreprises et leurs employés
-          const entreprisesResponse = await entrepriseService.getEntreprises();
-          setEntreprises(entreprisesResponse.data);
-          
-          // Récupérer tous les employés
-          // Note: ceci dépend de la façon dont votre API est structurée
-          const employesResponse = await employeService.getEmployes();
-          employesData = employesResponse.data;
-        }
-        
-        setEmployes(employesData);
-      } catch (error) {
-        console.error('Erreur lors du chargement des données:', error);
-        toast.error('Impossible de charger les données');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [entrepriseId]);
 
   // Ouvrir le modal pour ajouter un employé
   const handleAddEmploye = () => {
@@ -65,35 +35,14 @@ const EmployesPage = () => {
   };
 
   // Supprimer un employé
-  const handleDeleteEmploye = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet employé ?')) {
-      try {
-        await employeService.desactiverEmploye(id);
-        toast.success('Employé désactivé avec succès');
-        // Mettre à jour la liste des employés
-        setEmployes(employes.filter(e => e.id !== id));
-      } catch (error) {
-        console.error('Erreur lors de la suppression de l\'employé:', error);
-        toast.error('Impossible de supprimer l\'employé');
-      }
-    }
+  const handleDeleteEmploye = (id) => {
+    deleteEmploye(id);
   };
 
   // Après une action réussie (création ou modification)
-  const handleSuccess = async () => {
-    try {
-      // Recharger la liste des employés
-      if (entrepriseId) {
-        const response = await employeService.getEmployes(entrepriseId);
-        setEmployes(response.data);
-      } else {
-        // Si admin, recharger tous les employés
-        const response = await employeService.getEmployes();
-        setEmployes(response.data);
-      }
-    } catch (error) {
-      console.error('Erreur lors du rechargement des employés:', error);
-    }
+  const handleSuccess = () => {
+    fetchEmployes();
+    setIsModalOpen(false);
   };
 
   return (

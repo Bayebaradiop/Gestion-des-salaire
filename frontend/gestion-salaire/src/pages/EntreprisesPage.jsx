@@ -1,36 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { toast } from 'react-hot-toast';
+import React, { useState } from 'react';
 import { FaEdit, FaTrash, FaPlus, FaUsers } from 'react-icons/fa';
 import Button from '../components/ui/Button';
 import EntrepriseLogo from '../components/ui/EntrepriseLogo';
 import EntrepriseModal from '../components/modals/EntrepriseModal';
-import entrepriseService from '../services/entreprise.service';
-import { useNavigate } from 'react-router-dom';
+import { useEntreprise } from '../context/EntrepriseContext';
 
 const EntreprisesPage = () => {
-  const navigate = useNavigate();
-  const [entreprises, setEntreprises] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedEntreprise, setSelectedEntreprise] = useState(null);
+  const {
+    entreprises,
+    isLoading,
+    selectedEntreprise,
+    deleteEntreprise,
+    navigateToEmployes,
+    fetchEntreprises,
+    setSelectedEntreprise
+  } = useEntreprise();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // Charger la liste des entreprises
-  useEffect(() => {
-    const fetchEntreprises = async () => {
-      try {
-        setIsLoading(true);
-        const response = await entrepriseService.getEntreprises();
-        setEntreprises(response.data);
-      } catch (error) {
-        console.error('Erreur lors du chargement des entreprises:', error);
-        toast.error('Impossible de charger les entreprises');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchEntreprises();
-  }, []);
 
   // Ouvrir le modal pour ajouter une entreprise
   const handleAddEntreprise = () => {
@@ -45,35 +31,19 @@ const EntreprisesPage = () => {
   };
 
   // Supprimer une entreprise
-  const handleDeleteEntreprise = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette entreprise ? Cette action est irréversible.')) {
-      try {
-        // Note: Votre API devrait probablement avoir une méthode spécifique pour la suppression
-        await entrepriseService.supprimerEntreprise(id);
-        toast.success('Entreprise supprimée avec succès');
-        // Mettre à jour la liste des entreprises
-        setEntreprises(entreprises.filter(e => e.id !== id));
-      } catch (error) {
-        console.error('Erreur lors de la suppression de l\'entreprise:', error);
-        toast.error('Impossible de supprimer l\'entreprise');
-      }
-    }
+  const handleDeleteEntreprise = (id) => {
+    deleteEntreprise(id);
   };
 
   // Naviguer vers la page des employés d'une entreprise
   const handleViewEmployes = (entrepriseId) => {
-    navigate(`/entreprises/${entrepriseId}/employes`);
+    navigateToEmployes(entrepriseId);
   };
 
   // Après une action réussie (création ou modification)
-  const handleSuccess = async () => {
-    try {
-      // Recharger la liste des entreprises
-      const response = await entrepriseService.getEntreprises();
-      setEntreprises(response.data);
-    } catch (error) {
-      console.error('Erreur lors du rechargement des entreprises:', error);
-    }
+  const handleSuccess = () => {
+    fetchEntreprises();
+    setIsModalOpen(false);
   };
 
   return (

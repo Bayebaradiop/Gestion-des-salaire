@@ -2,21 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '../../hooks/useAuth';
+import { useBulletinPaie } from '../../context/BulletinPaieContext';
 import Card from '../../components/ui/Card';
 import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
-import cyclePaieService from '../../services/cyclePaie.service';
 import { FaArrowLeft, FaFileAlt, FaMoneyBillWave, FaFileInvoice } from 'react-icons/fa';
 
 const BulletinsPage = () => {
   const { cycleId } = useParams();
   const navigate = useNavigate();
   const { user, isCaissier } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [cycle, setCycle] = useState(null);
-  const [bulletins, setBulletins] = useState([]);
+
+  const {
+    bulletins,
+    currentCycle,
+    isLoading,
+    fetchBulletins,
+    recordPayment
+  } = useBulletinPaie();
+
   const [selectedBulletin, setSelectedBulletin] = useState(null);
   const [showPaiementModal, setShowPaiementModal] = useState(false);
   const [paiementForm, setPaiementForm] = useState({
@@ -28,40 +34,9 @@ const BulletinsPage = () => {
     commentaire: ''
   });
 
-  const loadBulletins = async () => {
-    try {
-      setLoading(true);
-      const response = await cyclePaieService.getBulletinsCycle(cycleId);
-      setBulletins(response.data);
-      
-      // Charger les informations du cycle
-      try {
-        // Dans une application réelle, vous auriez un endpoint pour obtenir les détails du cycle
-        // const cycleResponse = await cyclePaieService.getCycle(cycleId);
-        // setCycle(cycleResponse.data);
-        
-        // Pour la démo, on va créer un objet cycle factice
-        setCycle({
-          id: cycleId,
-          nom: `Cycle de Paie ${new Date().toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`,
-          statut: 'APPROUVE',
-          mois: new Date().getMonth() + 1,
-          annee: new Date().getFullYear()
-        });
-      } catch (error) {
-        console.error('Erreur lors du chargement des infos du cycle:', error);
-      }
-    } catch (error) {
-      toast.error('Erreur lors du chargement des bulletins');
-      console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    loadBulletins();
-  }, [cycleId]);
+    fetchBulletins(cycleId);
+  }, [cycleId, fetchBulletins]);
 
   const handleShowPaiementModal = (bulletin) => {
     setSelectedBulletin(bulletin);
@@ -83,18 +58,12 @@ const BulletinsPage = () => {
   const handleEnregistrerPaiement = async (e) => {
     e.preventDefault();
     if (!selectedBulletin) return;
-    
+
     try {
-      setLoading(true);
-      await cyclePaieService.enregistrerPaiement(selectedBulletin.id, paiementForm);
-      toast.success('Paiement enregistré avec succès');
+      await recordPayment(selectedBulletin.id, paiementForm);
       setShowPaiementModal(false);
-      loadBulletins();
     } catch (error) {
-      toast.error('Erreur lors de l\'enregistrement du paiement');
-      console.error('Erreur:', error);
-    } finally {
-      setLoading(false);
+      // Error is already handled in the context
     }
   };
 
@@ -182,7 +151,7 @@ const BulletinsPage = () => {
               <FaFileInvoice className="mr-1" /> PDF
             </Button>
             
-            {isCaissier && status !== 'PAYE' && cycle?.statut === 'APPROUVE' && (
+            {isCaissier && status !== 'PAYE' && currentCycle?.statut === 'APPROUVE' && (
               <Button 
                 size="sm" 
                 variant="success"
@@ -192,7 +161,7 @@ const BulletinsPage = () => {
               </Button>
             )}
             
-            {isCaissier && status !== 'PAYE' && cycle?.statut !== 'APPROUVE' && (
+            {isCaissier && status !== 'PAYE' && currentCycle?.statut !== 'APPROUVE' && (
               <Button 
                 size="sm" 
                 variant="outline"
@@ -223,7 +192,7 @@ const BulletinsPage = () => {
         </h1>
       </div>
 
-      {cycle && (
+      {currentCycle && (
         <div className="bg-white shadow rounded-lg">
           {/* Informations Entreprise et Cycle */}
           <div className="p-4 border-b border-gray-200">
@@ -231,36 +200,36 @@ const BulletinsPage = () => {
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Entreprise</h3>
                 <div className="text-sm text-gray-900">
-                  <div className="font-medium">{cycle.entreprise?.nom || 'Nom de l\'entreprise'}</div>
-                  <div className="text-gray-500">{cycle.entreprise?.adresse || 'Adresse non renseignée'}</div>
-                  <div className="text-gray-500">{cycle.entreprise?.email || 'Email non renseigné'}</div>
-                  <div className="text-gray-500">{cycle.entreprise?.telephone || 'Téléphone non renseigné'}</div>
+                  <div className="font-medium">{currentCycle.entreprise?.nom || 'Nom de l\'entreprise'}</div>
+                  <div className="text-gray-500">{currentCycle.entreprise?.adresse || 'Adresse non renseignée'}</div>
+                  <div className="text-gray-500">{currentCycle.entreprise?.email || 'Email non renseigné'}</div>
+                  <div className="text-gray-500">{currentCycle.entreprise?.telephone || 'Téléphone non renseigné'}</div>
                 </div>
               </div>
-              
+
               <div>
                 <h3 className="text-sm font-medium text-gray-700 mb-1">Cycle de Paie</h3>
                 <div className="text-sm text-gray-900">
-                  <div className="font-medium">{cycle.titre || cycle.nom}</div>
-                  <div className="text-gray-500">{cycle.periode || `${cycle.mois}/${cycle.annee}`}</div>
+                  <div className="font-medium">{currentCycle.titre || currentCycle.nom}</div>
+                  <div className="text-gray-500">{currentCycle.periode || `${currentCycle.mois}/${currentCycle.annee}`}</div>
                   <div className="text-gray-500">
-                    {cycle.dateDebut && cycle.dateFin && (
-                      `Du ${new Date(cycle.dateDebut).toLocaleDateString('fr-FR')} au ${new Date(cycle.dateFin).toLocaleDateString('fr-FR')}`
+                    {currentCycle.dateDebut && currentCycle.dateFin && (
+                      `Du ${new Date(currentCycle.dateDebut).toLocaleDateString('fr-FR')} au ${new Date(currentCycle.dateFin).toLocaleDateString('fr-FR')}`
                     )}
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex flex-col items-end justify-between">
-                <Badge 
+                <Badge
                   variant={
-                    cycle.statut === 'BROUILLON' ? 'default' : 
-                    cycle.statut === 'APPROUVE' ? 'primary' : 
+                    currentCycle.statut === 'BROUILLON' ? 'default' :
+                    currentCycle.statut === 'APPROUVE' ? 'primary' :
                     'success'
                   }
                 >
-                  {cycle.statut === 'BROUILLON' ? 'Brouillon' :
-                   cycle.statut === 'APPROUVE' ? 'Approuvé' : 'Clôturé'}
+                  {currentCycle.statut === 'BROUILLON' ? 'Brouillon' :
+                   currentCycle.statut === 'APPROUVE' ? 'Approuvé' : 'Clôturé'}
                 </Badge>
                 
                 {/* Bouton Export PDF en lot */}
@@ -279,7 +248,7 @@ const BulletinsPage = () => {
       )}
 
       <Card>
-        {loading ? (
+        {isLoading ? (
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-600"></div>
           </div>
@@ -299,18 +268,18 @@ const BulletinsPage = () => {
         title="Enregistrer un paiement"
         footer={
           <>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setShowPaiementModal(false)}
-              disabled={loading}
+              disabled={isLoading}
             >
               Annuler
             </Button>
-            <Button 
+            <Button
               variant="success"
               onClick={handleEnregistrerPaiement}
-              isLoading={loading}
-              disabled={loading}
+              isLoading={isLoading}
+              disabled={isLoading}
             >
               Confirmer le paiement
             </Button>
@@ -346,10 +315,10 @@ const BulletinsPage = () => {
                 value={paiementForm.montant}
                 onChange={handlePaiementFormChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                disabled={cycle?.statut !== 'APPROUVE'}
+                disabled={currentCycle?.statut !== 'APPROUVE'}
                 required
               />
-              {cycle?.statut !== 'APPROUVE' && (
+              {currentCycle?.statut !== 'APPROUVE' && (
                 <p className="mt-1 text-xs text-red-600">Le cycle doit être approuvé pour effectuer des paiements</p>
               )}
             </div>
@@ -362,7 +331,7 @@ const BulletinsPage = () => {
                 value={paiementForm.datePaiement}
                 onChange={handlePaiementFormChange}
                 className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                disabled={cycle?.statut !== 'APPROUVE'}
+                disabled={currentCycle?.statut !== 'APPROUVE'}
                 required
               />
             </div>

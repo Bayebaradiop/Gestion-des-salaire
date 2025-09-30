@@ -9,13 +9,10 @@ class AuthService {
       headers: {
         'Content-Type': 'application/json'
       },
-      withCredentials: true // Nécessaire pour les cookies HTTP-only
+      withCredentials: true 
     });
     
-    // Nous n'avons plus besoin d'injecter le token manuellement car il est envoyé
-    // automatiquement via les cookies HTTP-only pour chaque requête grâce à withCredentials: true
     
-    // Intercepteur pour gérer les erreurs 401 (non autorisé)
     this.axios.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -42,19 +39,6 @@ class AuthService {
     );
   }
 
-  // Nous n'avons plus besoin de cette méthode car le token est géré via cookies HTTP-only
-  setAuthToken() {
-    // Cette méthode est conservée pour compatibilité mais ne fait plus rien
-    // car les tokens sont gérés via cookies HTTP-only
-  }
-
-  // Effacer le token d'authentification (méthode maintenue pour compatibilité)
-  clearAuthToken() {
-    // Ne fait plus rien car les tokens sont gérés via cookies HTTP-only
-    // Cette méthode est maintenue pour compatibilité avec le code existant
-  }
-
-  // Connexion utilisateur
   login(email, motDePasse) {
     console.log('Tentative de connexion avec:', { email });
     return this.axios.post('/auth/connexion', { email, motDePasse })

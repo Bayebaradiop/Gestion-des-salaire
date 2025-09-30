@@ -1,82 +1,117 @@
-import axios from 'axios';
-import { API_URL } from '../config';
+import authService from './auth.service';
+import entrepriseService from './entreprise.service';
 
-// Créer une instance axios avec credentials pour inclure les cookies HTTP-only
-const api = axios.create({
-  baseURL: API_URL,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json'
+class DashboardService {
+  // Get salary evolution data for the last 12 months
+  getSalaryEvolution() {
+    return authService.axios.get('/dashboard/salary-evolution');
   }
-});
 
-/**
- * Service pour gérer les données du tableau de bord
- */
-const dashboardService = {
-  /**
-   * Récupère les statistiques générales
-   * @param {number} entrepriseId - ID de l'entreprise
-   * @returns {Promise} - Promesse contenant les statistiques
-   */
-  async getStats(entrepriseId) {
-    return api.get(`/entreprises/${entrepriseId}/dashboard/kpis`);
-  },
+  // Get employee distribution by company
+  getEmployeeDistribution() {
+    return authService.axios.get('/dashboard/employee-distribution');
+  }
 
-  /**
-   * Récupère les données pour les graphiques
-   * @param {number} entrepriseId - ID de l'entreprise
-   * @param {number} months - Nombre de mois à récupérer (par défaut 6)
-   * @returns {Promise} - Promesse contenant les données
-   */
-  async getGraphData(entrepriseId, months = 6) {
-    return api.get(`/entreprises/${entrepriseId}/dashboard/evolution-masse-salariale`);
-  },
+  // Get global statistics for super admin
+  getGlobalStats() {
+    return authService.axios.get('/dashboard/global-stats');
+  }
 
-  /**
-   * Vérifie si des données existent pour cette entreprise
-   * @param {number} entrepriseId - ID de l'entreprise
-   * @returns {Promise<boolean>} - Promesse contenant true si des données existent
-   */
-  async checkDataExists(entrepriseId) {
-    try {
-  const response = await api.get(`/entreprises/${entrepriseId}/dashboard/check-data`);
-      return response.data.hasData;
-    } catch (error) {
-      console.error("Erreur lors de la vérification des données:", error);
-      return false;
+  // Get salary evolution data (mock data for now)
+  getMockSalaryEvolution() {
+    const months = [
+      'Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+      'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'
+    ];
+
+    const currentMonth = new Date().getMonth();
+    const data = [];
+
+    for (let i = 11; i >= 0; i--) {
+      const monthIndex = (currentMonth - i + 12) % 12;
+      const baseSalary = 4500000; // Base salary mass
+      const variation = (Math.random() - 0.5) * 1000000; // Random variation
+
+      data.push({
+        month: months[monthIndex],
+        salaryMass: Math.max(0, Math.round(baseSalary + variation)),
+        fullMonth: months[monthIndex] + ' ' + new Date().getFullYear()
+      });
     }
-  },
 
-  /**
-   * Initialise la base de données avec des valeurs par défaut
-   * @param {number} entrepriseId - ID de l'entreprise
-   * @returns {Promise} - Promesse confirmant l'initialisation
-   */
-  async initializeData(entrepriseId) {
-    return api.post(`/dashboard/initialize`, { entrepriseId });
-  },
-
-  /**
-   * Récupère les prochains paiements à effectuer
-   * @param {number} entrepriseId - ID de l'entreprise
-   * @param {number} limit - Nombre maximum de paiements à retourner
-   * @returns {Promise} - Promesse contenant les paiements
-   */
-  async getNextPayments(entrepriseId, limit = 5) {
-    return api.get(`/entreprises/${entrepriseId}/dashboard/prochains-paiements`, {
-      params: { limit }
-    });
-  },
-
-  /**
-   * Récupère toutes les données du tableau de bord en un seul appel
-   * @param {number} entrepriseId - ID de l'entreprise
-   * @returns {Promise} - Promesse contenant toutes les données
-   */
-  async getDashboardData(entrepriseId) {
-    return api.get(`/entreprises/${entrepriseId}/dashboard/all-data`);
+    return Promise.resolve({ data });
   }
-};
 
+  // Get employee distribution data from real database
+  async getEmployeeDistribution() {
+    try {
+      const response = await entrepriseService.getEntreprises();
+      const entreprises = response.data;
+
+      // Calculate total employees across all companies
+      const totalEmployees = entreprises.reduce((sum, entreprise) => sum + (entreprise.nombreEmployesActifs || 0), 0);
+
+      // Filter companies that have active employees and create distribution data
+      const companiesWithEmployees = entreprises
+        .filter(entreprise => entreprise.nombreEmployesActifs > 0)
+        .map(entreprise => ({
+          name: entreprise.nom,
+          value: entreprise.nombreEmployesActifs || 0,
+          total: totalEmployees
+        }))
+        .sort((a, b) => b.value - a.value); // Sort by employee count descending
+
+      return { data: companiesWithEmployees };
+    } catch (error) {
+      console.error('Erreur lors de la récupération de la répartition des employés:', error);
+      // Return empty array as fallback
+      return { data: [] };
+    }
+  }
+
+  // Get global stats from real database
+  async getGlobalStats() {
+    try {
+      const response = await entrepriseService.getEntreprises();
+      const entreprises = response.data;
+
+      // Calculate real statistics from database
+      const totalEntreprises = entreprises.length;
+      const totalEmployesActifs = entreprises.reduce((sum, entreprise) => sum + (entreprise.nombreEmployesActifs || 0), 0);
+      const masseSalarialeTotale = entreprises.reduce((sum, entreprise) => sum + (entreprise.masseSalarialeMensuelle || 0), 0);
+
+      // Calculate payment statistics (estimates based on available data)
+      // In a real implementation, these would come from payment/bulletin APIs
+      const montantTotalPaye = Math.round(masseSalarialeTotale * 0.8); // Estimate: 80% paid
+      const montantTotalRestant = masseSalarialeTotale - montantTotalPaye;
+      const totalBulletinsGeneres = totalEmployesActifs * 12; // Estimate: 12 bulletins per employee per year
+
+      return {
+        data: {
+          totalEntreprises,
+          totalEmployesActifs,
+          masseSalarialeTotale,
+          totalBulletinsGeneres,
+          montantTotalPaye,
+          montantTotalRestant
+        }
+      };
+    } catch (error) {
+      console.error('Erreur lors de la récupération des statistiques globales:', error);
+      // Return default values as fallback
+      return {
+        data: {
+          totalEntreprises: 0,
+          totalEmployesActifs: 0,
+          masseSalarialeTotale: 0,
+          totalBulletinsGeneres: 0,
+          montantTotalPaye: 0,
+          montantTotalRestant: 0
+        }
+      };
+    }
+  }
+}
+
+const dashboardService = new DashboardService();
 export default dashboardService;

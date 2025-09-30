@@ -6,12 +6,15 @@ import {
   FaPlay, FaPause, FaEye, FaKey, FaArrowUp, FaArrowDown,
   FaCalendarAlt, FaCreditCard, FaFileInvoiceDollar
 } from 'react-icons/fa';
-import Button from '../components/ui/Button';
-import EntrepriseLogo from '../components/ui/EntrepriseLogo';
-import EntrepriseModal from '../components/modals/EntrepriseModal';
-import entrepriseService from '../services/entreprise.service';
+import Button from '../../components/ui/Button';
+import EntrepriseLogo from '../../components/ui/EntrepriseLogo';
+import EntrepriseModal from '../../components/modals/EntrepriseModal';
+import SalaryEvolutionChart from '../../components/charts/SalaryEvolutionChart';
+import EmployeeDistributionChart from '../../components/charts/EmployeeDistributionChart';
+import entrepriseService from '../../services/entreprise.service';
+import dashboardService from '../../services/dashboard.service';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 
 const SuperAdminDashboard = () => {
   const navigate = useNavigate();
@@ -26,7 +29,12 @@ const SuperAdminDashboard = () => {
     montantTotalRestant: 0,
     totalBulletins: 0
   });
+  const [chartData, setChartData] = useState({
+    salaryEvolution: [],
+    employeeDistribution: []
+  });
   const [isLoading, setIsLoading] = useState(true);
+  const [chartLoading, setChartLoading] = useState(false);
   const [selectedEntreprise, setSelectedEntreprise] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -36,21 +44,24 @@ const SuperAdminDashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setIsLoading(true);
-        const response = await entrepriseService.getEntreprises();
-        const entreprisesData = response.data;
+        setChartLoading(true);
 
+        // Charger les entreprises
+        const entreprisesResponse = await entrepriseService.getEntreprises();
+        const entreprisesData = entreprisesResponse.data;
         setEntreprises(entreprisesData);
 
-        // Calculer les statistiques globales
+        // Calculer les statistiques globales à partir des données réelles
         const totalEntreprises = entreprisesData.length;
         const totalUtilisateurs = entreprisesData.reduce((sum, e) => sum + (e.nombreEmployes || 0), 0);
         const totalEmployes = entreprisesData.reduce((sum, e) => sum + (e.nombreEmployesActifs || 0), 0);
         const masseSalarialeTotale = entreprisesData.reduce((sum, e) => sum + (e.masseSalarialeMensuelle || 0), 0);
 
-        // Données simulées pour les paiements et bulletins (à remplacer par vraies données API)
-        const montantTotalPaye = masseSalarialeTotale * 0.8; // Simulation
-        const montantTotalRestant = masseSalarialeTotale * 0.2; // Simulation
-        const totalBulletins = totalEmployes * 12; // Simulation
+        // Calculer les montants payés et restants (estimation basée sur les données disponibles)
+        // Pour une vraie implémentation, il faudrait récupérer ces données depuis l'API des paiements
+        const montantTotalPaye = Math.round(masseSalarialeTotale * 0.8); // Estimation: 80% payé
+        const montantTotalRestant = masseSalarialeTotale - montantTotalPaye;
+        const totalBulletins = totalEmployes * 12; // Estimation: 12 bulletins par employé par an
 
         setStats({
           totalEntreprises,
@@ -61,11 +72,24 @@ const SuperAdminDashboard = () => {
           montantTotalRestant,
           totalBulletins
         });
+
+        // Charger les données des graphiques
+        const [salaryEvolutionResponse, employeeDistributionResponse] = await Promise.all([
+          dashboardService.getMockSalaryEvolution(),
+          dashboardService.getEmployeeDistribution()
+        ]);
+
+        setChartData({
+          salaryEvolution: salaryEvolutionResponse.data,
+          employeeDistribution: employeeDistributionResponse.data
+        });
+
       } catch (error) {
         console.error('Erreur lors du chargement des données:', error);
         toast.error('Impossible de charger les données du dashboard');
       } finally {
         setIsLoading(false);
+        setChartLoading(false);
       }
     };
 
@@ -255,13 +279,10 @@ const SuperAdminDashboard = () => {
                   <FaChartLine className="mr-2 text-blue-600" />
                   Évolution de la masse salariale
                 </h3>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <FaChartLine className="mx-auto text-4xl mb-2" />
-                    <p>Graphique d'évolution mensuelle</p>
-                    <p className="text-sm">Intégration Chart.js recommandée</p>
-                  </div>
-                </div>
+                <SalaryEvolutionChart
+                  data={chartData.salaryEvolution}
+                  loading={chartLoading}
+                />
               </div>
 
               {/* Employee Distribution */}
@@ -270,13 +291,10 @@ const SuperAdminDashboard = () => {
                   <FaUsers className="mr-2 text-green-600" />
                   Répartition des employés
                 </h3>
-                <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                  <div className="text-center text-gray-500">
-                    <FaUsers className="mx-auto text-4xl mb-2" />
-                    <p>Camembert par entreprise</p>
-                    <p className="text-sm">Intégration Chart.js recommandée</p>
-                  </div>
-                </div>
+                <EmployeeDistributionChart
+                  data={chartData.employeeDistribution}
+                  loading={chartLoading}
+                />
               </div>
             </div>
 
