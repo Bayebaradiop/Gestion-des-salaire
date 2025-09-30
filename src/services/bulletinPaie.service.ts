@@ -19,6 +19,10 @@ export class BulletinPaieService {
     return await this.bulletinPaieRepository.listerParCycle(cyclePaieId);
   }
 
+  async listerParEmploye(employeId: number, filtres?: { statut?: string[] }): Promise<BulletinPaie[]> {
+    return await this.bulletinPaieRepository.listerParEmploye(employeId, filtres);
+  }
+
   async obtenirParId(id: number): Promise<BulletinPaie | null> {
     return await this.bulletinPaieRepository.trouverParId(id);
   }

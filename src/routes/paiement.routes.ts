@@ -8,6 +8,13 @@ const paiementController = new PaiementController();
 // Toutes les routes nécessitent une authentification
 router.use(authentifier);
 
+// Route pour lister tous les paiements avec filtres
+// GET /paiements - Lister tous les paiements avec filtres
+router.get('/paiements',
+  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  (req, res, next) => paiementController.listerTous(req, res, next)
+);
+
 // Routes pour les paiements d'un bulletin
 // GET /bulletins/:bulletinId/paiements - Lister les paiements d'un bulletin
 router.get('/bulletins/:bulletinId/paiements',

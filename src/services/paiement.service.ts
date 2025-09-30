@@ -81,4 +81,23 @@ export class PaiementService {
   async listerParEntrepriseEtPeriode(entrepriseId: number, periode: string): Promise<any[]> {
     return await this.paiementRepository.listerParEntrepriseEtPeriode(entrepriseId, periode);
   }
+
+  async listerAvecFiltres(
+    page: number, 
+    limit: number, 
+    filtres: {
+      dateDebut?: Date;
+      dateFin?: Date;
+      employeId?: number;
+      methodePaiement?: string;
+      entrepriseId?: number;
+    }
+  ): Promise<{
+    paiements: any[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    return await this.paiementRepository.listerAvecFiltres(page, limit, filtres);
+  }
 }

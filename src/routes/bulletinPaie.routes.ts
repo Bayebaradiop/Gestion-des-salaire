@@ -52,4 +52,10 @@ router.get('/bulletins/:id/pdf',
   (req, res, next) => bulletinPaieController.genererPDF(req, res, next)
 );
 
+// GET /employes/:employeId/bulletins - Lister les bulletins d'un employé
+router.get('/employes/:employeId/bulletins',
+  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  (req, res, next) => bulletinPaieController.listerParEmploye(req, res, next)
+);
+
 export default router;

@@ -6,6 +6,12 @@ class EmployeService {
     return authService.axios.get(`/entreprises/${entrepriseId}/employes`);
   }
 
+  // Alias pour la compatibilité
+  async listerParEntreprise(entrepriseId) {
+    const response = await authService.axios.get(`/entreprises/${entrepriseId}/employes`);
+    return response.data;
+  }
+
   // Obtenir la liste des employés avec filtres optionnels
   getEmployes(entrepriseId, filters = {}) {
     let url = `/entreprises/${entrepriseId}/employes`;

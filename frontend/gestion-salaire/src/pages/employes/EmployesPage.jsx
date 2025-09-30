@@ -7,8 +7,9 @@ import Table from '../../components/ui/Table';
 import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
+import EmployeDetailsModal from '../../components/modals/EmployeDetailsModal';
 import employeService from '../../services/employe.service';
-import { FaPlus, FaFilter, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaCheck, FaTimes, FaEdit, FaEye } from 'react-icons/fa';
 
 const EmployesPage = () => {
   const { user, isAdmin } = useAuth();
@@ -21,6 +22,8 @@ const EmployesPage = () => {
   });
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [confirmActionModal, setConfirmActionModal] = useState({ show: false, action: null, employe: null });
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedEmploye, setSelectedEmploye] = useState(null);
   const [postes, setPostes] = useState([]);
   
   // Pour la pagination (à implémenter plus tard)
@@ -88,6 +91,11 @@ const EmployesPage = () => {
       setLoading(false);
       setConfirmActionModal({ show: false, action: null, employe: null });
     }
+  };
+
+  const handleShowDetails = (employe) => {
+    setSelectedEmploye(employe);
+    setShowDetailsModal(true);
   };
 
   const columns = [
@@ -163,6 +171,14 @@ const EmployesPage = () => {
       header: 'Actions',
       render: (employe) => (
         <div className="flex space-x-2">
+          <Button 
+            size="sm"
+            variant="outline"
+            onClick={() => handleShowDetails(employe)}
+            title="Voir les détails"
+          >
+            <FaEye />
+          </Button>
           {isAdmin && (
             <>
               <Button 
@@ -173,10 +189,15 @@ const EmployesPage = () => {
                   action: employe.estActif ? 'desactiver' : 'activer',
                   employe
                 })}
+                title={employe.estActif ? 'Désactiver' : 'Activer'}
               >
                 {employe.estActif ? <FaTimes /> : <FaCheck />}
               </Button>
-              <Button size="sm" variant="outline">
+              <Button 
+                size="sm" 
+                variant="outline"
+                title="Modifier"
+              >
                 <FaEdit />
               </Button>
             </>
@@ -320,6 +341,16 @@ const EmployesPage = () => {
           </span> ?
         </p>
       </Modal>
+
+      {/* Modal des détails d'employé */}
+      <EmployeDetailsModal
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedEmploye(null);
+        }}
+        employe={selectedEmploye}
+      />
     </div>
   );
 };

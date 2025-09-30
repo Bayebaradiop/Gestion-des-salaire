@@ -10,7 +10,7 @@ import {
 } from 'react-icons/fa';
 
 const Sidebar = () => {
-  const { isAdmin, isSuperAdmin } = useAuth();
+  const { isAdmin, isSuperAdmin, isCaissier } = useAuth();
 
   return (
     <aside className="w-64 bg-white shadow-sm min-h-screen hidden md:block">
@@ -21,7 +21,39 @@ const Sidebar = () => {
         </div>
 
         <nav className="space-y-1">
-          {!isSuperAdmin && (
+          {isCaissier && (
+            <>
+              <NavLink
+                to="/caissier"
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <FaTachometerAlt className="mr-3" />
+                Dashboard Caissier
+              </NavLink>
+
+              <NavLink
+                to="/caissier/bulletins"
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 rounded-md transition-colors ${
+                    isActive
+                      ? 'bg-blue-50 text-blue-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`
+                }
+              >
+                <FaMoneyBillWave className="mr-3" />
+                Consultation Bulletins
+              </NavLink>
+            </>
+          )}
+
+          {!isSuperAdmin && !isCaissier && (
             <>
               <NavLink
                 to="/dashboard"

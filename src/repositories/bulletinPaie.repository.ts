@@ -31,6 +31,28 @@ export class BulletinPaieRepository extends BaseRepository {
     });
   }
 
+  async listerParEmploye(employeId: number, filtres?: { statut?: string[] }): Promise<BulletinPaie[]> {
+    const where: any = { employeId };
+    
+    if (filtres?.statut && filtres.statut.length > 0) {
+      where.statut = { in: filtres.statut };
+    }
+
+    return await this.prisma.bulletinPaie.findMany({
+      where,
+      include: {
+        employe: true,
+        cyclePaie: {
+          include: {
+            entreprise: true
+          }
+        },
+        paiements: true
+      },
+      orderBy: { creeLe: 'desc' }
+    });
+  }
+
   async trouverParId(id: number): Promise<BulletinPaie | null> {
     return await this.prisma.bulletinPaie.findUnique({
       where: { id },

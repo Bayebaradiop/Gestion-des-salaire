@@ -11,6 +11,8 @@ import BulletinsPage from './pages/cycles/BulletinsPage';
 import BulletinDetailPage from './pages/cycles/BulletinDetailPage';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import SuperAdminEntrepriseDetailsPage from './pages/SuperAdminEntrepriseDetailsPage';
+import CaissierDashboard from './pages/CaissierDashboard';
+import ConsultationBulletins from './pages/ConsultationBulletins';
 // import TestPage from './pages/TestPage';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
@@ -27,10 +29,18 @@ function App() {
     );
   }
 
+  // Redirection basée sur le rôle
+  const getDefaultRoute = () => {
+    if (!user) return '/login';
+    if (user.role === 'CAISSIER') return '/caissier';
+    if (user.role === 'SUPER_ADMIN') return '/super-admin';
+    return '/dashboard';
+  };
+
   return (
     <>
       <Routes>
-        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" />} />
+        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={getDefaultRoute()} />} />
         
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
@@ -44,8 +54,10 @@ function App() {
             <Route path="/bulletins/:bulletinId" element={<BulletinDetailPage />} />
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/super-admin/entreprises/:entrepriseId" element={<SuperAdminEntrepriseDetailsPage />} />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            <Route path="*" element={<Navigate to="/dashboard" />} />
+            <Route path="/caissier" element={<CaissierDashboard />} />
+            <Route path="/caissier/bulletins" element={<ConsultationBulletins />} />
+            <Route path="/" element={<Navigate to={getDefaultRoute()} />} />
+            <Route path="*" element={<Navigate to={getDefaultRoute()} />} />
           </Route>
         </Route>
       </Routes>

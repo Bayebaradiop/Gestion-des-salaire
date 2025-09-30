@@ -137,6 +137,25 @@ export class BulletinPaieController {
     }
   };
 
+  public listerParEmploye = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const employeId = parseInt(req.params.employeId);
+      const { statut } = req.query;
+      
+      // Filtres optionnels
+      const filtres: any = {};
+      if (statut) {
+        // Gérer les statuts multiples (séparés par des virgules)
+        filtres.statut = typeof statut === 'string' ? statut.split(',') : [statut];
+      }
+
+      const bulletins = await this.service.listerParEmploye(employeId, filtres);
+      res.json(bulletins);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public genererPDF = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const bulletinComplet = await this.service.obtenirAvecDetails(parseInt(req.params.id));

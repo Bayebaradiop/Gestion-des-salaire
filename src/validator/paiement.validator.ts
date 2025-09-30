@@ -20,18 +20,13 @@ export const enregistrerPaiementSchema = z.object({
   
   methodePaiement: z.enum(['ESPECES', 'VIREMENT_BANCAIRE', 'ORANGE_MONEY', 'WAVE', 'AUTRE']),
   
-  referenceTransaction: z.string()
-    .min(1, "La référence de transaction est requise")
+  reference: z.string()
     .max(100, "La référence ne peut pas dépasser 100 caractères")
-    .trim(),
+    .trim()
+    .optional(),
   
-  numeroRecu: z.string()
-    .min(1, "Le numéro de reçu est requis")
-    .max(50, "Le numéro de reçu ne peut pas dépasser 50 caractères")
-    .trim(),
-  
-  commentaire: z.string()
-    .max(500, "Le commentaire ne peut pas dépasser 500 caractères")
+  notes: z.string()
+    .max(500, "Les notes ne peuvent pas dépasser 500 caractères")
     .trim()
     .optional()
 });

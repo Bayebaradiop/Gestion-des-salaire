@@ -19,6 +19,42 @@ export class PaiementController {
     }
   };
 
+  public listerTous = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.utilisateur) {
+        res.status(401).json({ message: 'Non authentifié' });
+        return;
+      }
+
+      const { 
+        page = 1, 
+        limit = 10, 
+        dateDebut, 
+        dateFin, 
+        employeId, 
+        methodePaiement 
+      } = req.query;
+
+      const filtres = {
+        dateDebut: dateDebut ? new Date(dateDebut as string) : undefined,
+        dateFin: dateFin ? new Date(dateFin as string) : undefined,
+        employeId: employeId ? parseInt(employeId as string) : undefined,
+        methodePaiement: methodePaiement as string || undefined,
+        entrepriseId: req.utilisateur.entrepriseId
+      };
+
+      const result = await this.service.listerAvecFiltres(
+        parseInt(page as string), 
+        parseInt(limit as string), 
+        filtres
+      );
+      
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public obtenirParId = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const verifParams = paiementParamsSchema.safeParse(req.params);
@@ -56,8 +92,15 @@ export class PaiementController {
         });
       }
 
+      // Extraire seulement les champs nécessaires pour la création
+      const { bulletinPaieId, montant, methodePaiement, reference, notes } = verif.data;
+      
       const paiement = await this.service.creer({
-        ...verif.data,
+        bulletinPaieId,
+        montant,
+        methodePaiement,
+        reference: reference || null,
+        notes: notes || null,
         traiteParId: req.utilisateur.id,
       });
       res.status(201).json(paiement);

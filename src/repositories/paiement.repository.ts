@@ -6,7 +6,7 @@ export interface CreerPaiementData {
   methodePaiement: MethodePaiement;
   reference?: string | null;
   notes?: string | null;
-  numeroRecu: string;
+  numeroRecu?: string; // Optionnel car généré automatiquement
   bulletinPaieId: number;
   traiteParId: number;
 }
@@ -49,6 +49,10 @@ export class PaiementRepository extends BaseRepository {
   }
 
   async creer(donnees: CreerPaiementData): Promise<Paiement> {
+    if (!donnees.numeroRecu) {
+      throw new Error('Le numéro de reçu est requis pour créer un paiement');
+    }
+    
     return await this.prisma.paiement.create({
       data: {
         montant: donnees.montant,
@@ -170,5 +174,110 @@ export class PaiementRepository extends BaseRepository {
       },
       orderBy: { creeLe: 'desc' }
     });
+  }
+
+  async listerAvecFiltres(
+    page: number, 
+    limit: number, 
+    filtres: {
+      dateDebut?: Date;
+      dateFin?: Date;
+      employeId?: number;
+      methodePaiement?: string;
+      entrepriseId?: number;
+    }
+  ): Promise<{
+    paiements: any[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const where: any = {};
+
+    // Filtres de base
+    if (filtres.entrepriseId) {
+      where.bulletinPaie = {
+        employe: {
+          entrepriseId: filtres.entrepriseId
+        }
+      };
+    }
+
+    // Filtre par employé
+    if (filtres.employeId) {
+      where.bulletinPaie = {
+        ...where.bulletinPaie,
+        employeId: filtres.employeId
+      };
+    }
+
+    // Filtre par méthode de paiement
+    if (filtres.methodePaiement) {
+      where.methodePaiement = filtres.methodePaiement;
+    }
+
+    // Filtre par date
+    if (filtres.dateDebut || filtres.dateFin) {
+      where.creeLe = {};
+      if (filtres.dateDebut) {
+        where.creeLe.gte = filtres.dateDebut;
+      }
+      if (filtres.dateFin) {
+        where.creeLe.lte = filtres.dateFin;
+      }
+    }
+
+    // Compter le total
+    const total = await this.prisma.paiement.count({ where });
+    
+    // Récupérer les paiements avec pagination
+    const paiements = await this.prisma.paiement.findMany({
+      where,
+      include: {
+        bulletinPaie: {
+          include: {
+            employe: {
+              select: {
+                id: true,
+                nom: true,
+                prenom: true,
+                codeEmploye: true,
+                entreprise: {
+                  select: {
+                    id: true,
+                    nom: true
+                  }
+                }
+              }
+            },
+            cyclePaie: {
+              select: {
+                id: true,
+                titre: true,
+                periode: true
+              }
+            }
+          }
+        },
+        traitePar: {
+          select: {
+            id: true,
+            nom: true,
+            prenom: true,
+            email: true
+          }
+        }
+      },
+      orderBy: { creeLe: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    return {
+      paiements,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    };
   }
 }

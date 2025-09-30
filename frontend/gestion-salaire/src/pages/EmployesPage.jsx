@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
 import Button from '../components/ui/Button';
 import EmployeModal from '../components/modals/EmployeModal';
+import EmployeDetailsModal from '../components/modals/EmployeDetailsModal';
 import employeService from '../services/employe.service';
 import entrepriseService from '../services/entreprise.service';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +17,8 @@ const EmployesPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEmploye, setSelectedEmploye] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEmployeDetails, setSelectedEmployeDetails] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
 
   // Charger la liste des employés et des entreprises
   useEffect(() => {
@@ -62,6 +65,12 @@ const EmployesPage = () => {
   const handleEditEmploye = (employe) => {
     setSelectedEmploye(employe);
     setIsModalOpen(true);
+  };
+
+  // Afficher les détails d'un employé
+  const handleViewEmployeDetails = (employe) => {
+    setSelectedEmployeDetails(employe);
+    setIsDetailsModalOpen(true);
   };
 
   // Supprimer un employé
@@ -180,14 +189,23 @@ const EmployesPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
                       <button
+                        onClick={() => handleViewEmployeDetails(employe)}
+                        className="text-green-600 hover:text-green-900"
+                        title="Voir les détails"
+                      >
+                        <FaEye />
+                      </button>
+                      <button
                         onClick={() => handleEditEmploye(employe)}
                         className="text-blue-600 hover:text-blue-900"
+                        title="Modifier"
                       >
                         <FaEdit />
                       </button>
                       <button
                         onClick={() => handleDeleteEmploye(employe.id)}
                         className="text-red-600 hover:text-red-900"
+                        title="Supprimer"
                       >
                         <FaTrash />
                       </button>
@@ -207,6 +225,13 @@ const EmployesPage = () => {
         employe={selectedEmploye}
         entreprises={entreprises}
         onSuccess={handleSuccess}
+      />
+
+      {/* Modal pour afficher les détails de l'employé */}
+      <EmployeDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        employe={selectedEmployeDetails}
       />
     </div>
   );
