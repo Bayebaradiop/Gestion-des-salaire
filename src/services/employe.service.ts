@@ -27,6 +27,22 @@ export class EmployeService {
       throw new Error('Entreprise non trouvée');
     }
 
+    // Vérifier l'unicité de l'email
+    if (donnees.email) {
+      const emailUnique = await this.employeRepository.verifierEmailUnique(donnees.email);
+      if (!emailUnique) {
+        throw new Error('Cet email est déjà utilisé par un autre employé');
+      }
+    }
+
+    // Vérifier l'unicité du téléphone
+    if (donnees.telephone) {
+      const telephoneUnique = await this.employeRepository.verifierTelephoneUnique(donnees.telephone);
+      if (!telephoneUnique) {
+        throw new Error('Ce numéro de téléphone est déjà utilisé par un autre employé');
+      }
+    }
+
     // Générer automatiquement le code employé
     const codeEmploye = await this.genererCodeEmploye(entrepriseId);
 

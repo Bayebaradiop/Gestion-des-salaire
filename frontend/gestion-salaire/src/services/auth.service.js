@@ -87,6 +87,16 @@ class AuthService {
   checkAuthStatus() {
     return this.axios.get('/auth/me');
   }
+
+  // Obtenir le profil utilisateur avec les informations de l'entreprise
+  obtenirProfil() {
+    return this.axios.get('/auth/profil')
+      .then(response => response.data)
+      .catch(error => {
+        console.error('Erreur lors de la récupération du profil:', error);
+        throw error;
+      });
+  }
 }
 
 const authService = new AuthService();

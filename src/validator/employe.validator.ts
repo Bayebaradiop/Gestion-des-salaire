@@ -2,33 +2,53 @@ import { z } from 'zod';
 
 /**
  * Validators pour la gestion des employés
+ * Conformément aux exigences pour le formulaire d'ajout d'employé
  */
+
+// Validation de la date (doit être antérieure ou égale à aujourd'hui)
+const dateEmbaucheValidation = z.string()
+  .min(1, "La date d'embauche est requise")
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (YYYY-MM-DD)")
+  .refine((date) => {
+    const inputDate = new Date(date);
+    const today = new Date();
+    today.setHours(23, 59, 59, 999); // Fin de journée pour permettre la date d'aujourd'hui
+    return inputDate <= today;
+  }, "La date d'embauche ne peut pas être dans le futur");
+
+// Validation IBAN française et internationale
+const ibanValidation = z.string()
+  .trim()
+  .optional()
+  .refine((iban) => {
+    if (!iban) return true; // Optionnel
+    // Supprimer les espaces
+    const cleanIban = iban.replace(/\s/g, '');
+    // Vérifier le format de base (2 lettres + 2 chiffres + jusqu'à 30 caractères alphanumériques)
+    return /^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/.test(cleanIban);
+  }, "Format IBAN invalide (ex: FR14 2004 1010 0505 0001 3M02 606)");
 
 // Schema pour la création d'employé
 export const creerEmployeSchema = z.object({
+  email: z.string()
+    .min(1, "L'email est requis")
+    .email("Veuillez entrer un email valide")
+    .max(100, "L'email ne peut pas dépasser 100 caractères")
+    .trim(),
+  
   prenom: z.string()
     .min(1, "Le prénom est requis")
     .min(2, "Le prénom doit contenir au moins 2 caractères")
     .max(50, "Le prénom ne peut pas dépasser 50 caractères")
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le prénom ne peut contenir que des lettres, espaces, apostrophes et tirets")
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le prénom ne peut contenir que des lettres uniquement")
     .trim(),
   
   nom: z.string()
     .min(1, "Le nom est requis")
     .min(2, "Le nom doit contenir au moins 2 caractères")
     .max(50, "Le nom ne peut pas dépasser 50 caractères")
-    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le nom ne peut contenir que des lettres, espaces, apostrophes et tirets")
+    .regex(/^[a-zA-ZÀ-ÿ\s'-]+$/, "Le nom ne peut contenir que des lettres uniquement")
     .trim(),
-  
-  email: z.string()
-    .email("Format d'email invalide")
-    .max(100, "L'email ne peut pas dépasser 100 caractères")
-    .optional(),
-  
-  telephone: z.string()
-    .regex(/^\+?[0-9]{8,15}$/, "Format de téléphone invalide (8-15 chiffres, + optionnel)")
-    .trim()
-    .optional(),
   
   poste: z.string()
     .min(1, "Le poste est requis")
@@ -36,24 +56,26 @@ export const creerEmployeSchema = z.object({
     .max(100, "Le poste ne peut pas dépasser 100 caractères")
     .trim(),
   
-  typeContrat: z.enum(['FIXE', 'JOURNALIER', 'HONORAIRE']),
+  typeContrat: z.enum(['FIXE', 'JOURNALIER', 'HONORAIRE'], {
+    message: "Type de contrat requis (fixe, journalier, honoraire)"
+  }),
   
   salaireBase: z.number()
-    .min(0, "Le salaire de base doit être positif ou nul")
+    .positive("Le salaire doit être supérieur à 0")
     .optional(),
   
   tauxJournalier: z.number()
-    .min(0, "Le taux journalier doit être positif ou nul")
+    .positive("Le taux journalier doit être supérieur à 0")
     .optional(),
   
-  compteBancaire: z.string()
-    .regex(/^[0-9A-Z\s-]+$/, "Format de compte bancaire invalide")
-    .trim()
-    .optional(),
+  dateEmbauche: dateEmbaucheValidation,
   
-  dateEmbauche: z.string()
-    .min(1, "La date d'embauche est requise")
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (YYYY-MM-DD)"),
+  compteBancaire: ibanValidation,
+  
+  telephone: z.string()
+    .min(1, "Le téléphone est requis")
+    .regex(/^\+221[0-9]{9}$/, "Format téléphone invalide (+221XXXXXXXXX)")
+    .trim(),
   
   estActif: z.boolean().default(true),
   
@@ -62,15 +84,19 @@ export const creerEmployeSchema = z.object({
     .positive("L'ID entreprise doit être positif")
 }).refine((data) => {
   // Validation conditionnelle selon le type de contrat
-  if (data.typeContrat === 'FIXE' && !data.salaireBase) {
+  if (data.typeContrat === 'FIXE' && (!data.salaireBase || data.salaireBase <= 0)) {
     return false;
   }
-  if ((data.typeContrat === 'JOURNALIER' || data.typeContrat === 'HONORAIRE') && !data.tauxJournalier) {
+  if (data.typeContrat === 'JOURNALIER' && (!data.tauxJournalier || data.tauxJournalier <= 0)) {
+    return false;
+  }
+  if (data.typeContrat === 'HONORAIRE' && (!data.salaireBase || data.salaireBase <= 0)) {
     return false;
   }
   return true;
 }, {
-  message: "Salaire de base requis pour FIXE, taux journalier requis pour JOURNALIER/HONORAIRE"
+  message: "Le salaire de base est requis pour les contrats fixes et honoraires, le taux journalier pour les contrats journaliers",
+  path: ["salaireBase", "tauxJournalier"] // Indiquer les champs concernés
 });
 
 // Schema pour la modification d'employé

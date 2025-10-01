@@ -170,4 +170,30 @@ export class EmployeRepository extends BaseRepository {
     const count = await this.prisma.employe.count({ where });
     return count === 0;
   }
+
+  /**
+   * Vérifier l'unicité de l'email
+   */
+  async verifierEmailUnique(email: string, excludeId?: number): Promise<boolean> {
+    const where: any = { email };
+    if (excludeId) {
+      where.id = { not: excludeId };
+    }
+
+    const count = await this.prisma.employe.count({ where });
+    return count === 0;
+  }
+
+  /**
+   * Vérifier l'unicité du téléphone
+   */
+  async verifierTelephoneUnique(telephone: string, excludeId?: number): Promise<boolean> {
+    const where: any = { telephone };
+    if (excludeId) {
+      where.id = { not: excludeId };
+    }
+
+    const count = await this.prisma.employe.count({ where });
+    return count === 0;
+  }
 }

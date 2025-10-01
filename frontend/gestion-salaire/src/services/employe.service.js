@@ -43,7 +43,20 @@ class EmployeService {
   }
   
   // Créer un nouvel employé
-  creerEmploye(entrepriseId, employeData) {
+  creerEmploye(employeData) {
+    // Si l'entrepriseId est dans les données, utiliser la route appropriée
+    if (employeData.entrepriseId) {
+      const entrepriseId = employeData.entrepriseId;
+      // Retirer l'entrepriseId des données car il sera ajouté automatiquement par le backend
+      const { entrepriseId: _, ...dataToSend } = employeData;
+      return authService.axios.post(`/entreprises/${entrepriseId}/employes`, dataToSend);
+    }
+    // Sinon utiliser la route générale
+    return authService.axios.post('/employes', employeData);
+  }
+
+  // Ancienne méthode pour compatibilité descendante
+  creerEmployePourEntreprise(entrepriseId, employeData) {
     return authService.axios.post(`/entreprises/${entrepriseId}/employes`, employeData);
   }
   

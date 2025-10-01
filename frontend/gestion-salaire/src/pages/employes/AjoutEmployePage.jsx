@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import employeService from '../../services/employe.service';
+import { formatBackendErrors, extractMainErrorMessage, validateEmployeData } from '../../utils/errorHandling';
 import { FaArrowLeft } from 'react-icons/fa';
 
 const EmployeSchema = Yup.object().shape({
@@ -50,40 +51,52 @@ const AjoutEmployePage = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (values) => {
+  const handleSubmit = async (values, { setSubmitting, setFieldError }) => {
     try {
       setIsSubmitting(true);
+      
+      // Validation côté client d'abord
+      const validation = validateEmployeData(values);
+      if (!validation.isValid) {
+        Object.keys(validation.errors).forEach(field => {
+          setFieldError(field, validation.errors[field]);
+        });
+        return;
+      }
+      
       const entrepriseId = user.entrepriseId || 1;
 
-      // Préparer le payload en fonction du type de contrat
       const payload = {
         ...values,
         entrepriseId
       };
 
-      // Gérer les champs numériques selon le type de contrat
-      if (values.typeContrat === 'FIXE') {
-        payload.salaireBase = values.salaireBase ? Number(values.salaireBase) : 0;
-        // Pas de taux journalier pour les contrats fixes
-        delete payload.tauxJournalier;
-      } else if (values.typeContrat === 'JOURNALIER' || values.typeContrat === 'HONORAIRE') {
-        payload.tauxJournalier = values.tauxJournalier ? Number(values.tauxJournalier) : 0;
-        // Pas de salaire de base pour les contrats journaliers/honoraires
-        delete payload.salaireBase;
+      // Conversion des salaires/taux selon le type de contrat
+      if (values.typeContrat === 'FIXE' || values.typeContrat === 'HONORAIRE') {
+        payload.salaireBase = values.salaireBase ? Number(values.salaireBase) : null;
+        payload.tauxJournalier = null; // Explicit null pour les contrats fixes/honoraires
+      } else if (values.typeContrat === 'JOURNALIER') {
+        payload.tauxJournalier = values.tauxJournalier ? Number(values.tauxJournalier) : null;
+        payload.salaireBase = null; // Explicit null pour les contrats journaliers
       }
 
       console.log('Payload envoyé:', payload); // Pour déboggage
 
-      await employeService.creerEmploye(entrepriseId, payload);
+      await employeService.creerEmploye(payload);
       toast.success('Employé créé avec succès!');
       navigate('/employes');
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error(
-        error.response?.data?.message ||
-        error.response?.data?.errors ||
-        'Erreur lors de la création de l\'employé'
-      );
+      
+      // Gérer les erreurs de validation du backend
+      const backendErrors = formatBackendErrors(error);
+      Object.keys(backendErrors).forEach(field => {
+        setFieldError(field, backendErrors[field]);
+      });
+      
+      // Afficher le message d'erreur principal
+      const mainErrorMessage = extractMainErrorMessage(error);
+      toast.error(mainErrorMessage);
     } finally {
       setIsSubmitting(false);
     }

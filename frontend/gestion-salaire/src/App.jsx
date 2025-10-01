@@ -11,6 +11,7 @@ import BulletinsPage from './pages/cycles/BulletinsPage';
 import BulletinDetailPage from './pages/cycles/BulletinDetailPage';
 import SuperAdminDashboard from './pages/SuperAdminDashboard';
 import SuperAdminEntrepriseDetailsPage from './pages/SuperAdminEntrepriseDetailsPage';
+import EmployesEntreprisePage from './pages/employes/EmployesEntreprisePage';
 import CaissierDashboard from './pages/CaissierDashboard';
 import ConsultationBulletins from './pages/ConsultationBulletins';
 // import TestPage from './pages/TestPage';
@@ -54,6 +55,7 @@ function App() {
             <Route path="/bulletins/:bulletinId" element={<BulletinDetailPage />} />
             <Route path="/super-admin" element={<SuperAdminDashboard />} />
             <Route path="/super-admin/entreprises/:entrepriseId" element={<SuperAdminEntrepriseDetailsPage />} />
+            <Route path="/super-admin/entreprises/:entrepriseId/employes" element={<EmployesEntreprisePage />} />
             <Route path="/caissier" element={<CaissierDashboard />} />
             <Route path="/caissier/bulletins" element={<ConsultationBulletins />} />
             <Route path="/" element={<Navigate to={getDefaultRoute()} />} />

@@ -146,12 +146,25 @@ export class AuthService {
     }
   }
 
-  async obtenirProfil(id: number): Promise<{ utilisateur: Omit<ReponseAuth['utilisateur'], never> } | null> {
+  async obtenirProfil(id: number): Promise<{ utilisateur: Omit<ReponseAuth['utilisateur'], never>; entreprise?: { nom: string; logo?: string } } | null> {
     try {
       const utilisateur = await this.authRepository.trouverParId(id);
 
       if (!utilisateur) {
         return null;
+      }
+
+      let entreprise = undefined;
+      
+      // Si l'utilisateur a une entreprise (ADMIN ou CAISSIER), récupérer ses informations
+      if (utilisateur.entrepriseId && (utilisateur.role === 'ADMIN' || utilisateur.role === 'CAISSIER')) {
+        const entrepriseData = await this.entrepriseRepository.trouverParId(utilisateur.entrepriseId);
+        if (entrepriseData) {
+          entreprise = {
+            nom: entrepriseData.nom,
+            logo: entrepriseData.logo || undefined
+          };
+        }
       }
 
       return {
@@ -162,7 +175,8 @@ export class AuthService {
           prenom: utilisateur.prenom,
           role: utilisateur.role,
           entrepriseId: utilisateur.entrepriseId || undefined
-        }
+        },
+        entreprise
       };
     } catch (error) {
       console.error('Erreur lors de la récupération du profil:', error);

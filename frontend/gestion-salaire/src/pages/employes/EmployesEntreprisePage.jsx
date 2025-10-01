@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { toast } from 'react-toastify';
 import Card from '../../components/ui/Card';
@@ -8,14 +8,18 @@ import Button from '../../components/ui/Button';
 import Badge from '../../components/ui/Badge';
 import Modal from '../../components/ui/Modal';
 import EmployeDetailsModal from '../../components/modals/EmployeDetailsModal';
-import FormulaireAjoutEmploye from '../../components/formulaires/FormulaireAjoutEmploye';
+import EmployeModalSuperAdmin from '../../components/modals/EmployeModalSuperAdmin';
 import employeService from '../../services/employe.service';
-import { FaPlus, FaFilter, FaCheck, FaTimes, FaEdit, FaEye } from 'react-icons/fa';
+import entrepriseService from '../../services/entreprise.service';
+import { FaPlus, FaFilter, FaCheck, FaTimes, FaEdit, FaEye, FaArrowLeft } from 'react-icons/fa';
 
-const EmployesPage = () => {
+const EmployesEntreprisePage = () => {
+  const { entrepriseId } = useParams();
+  const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
   const [employes, setEmployes] = useState([]);
+  const [entreprise, setEntreprise] = useState(null);
   const [filtres, setFiltres] = useState({
     estActif: '',
     typeContrat: '',
@@ -27,19 +31,27 @@ const EmployesPage = () => {
   const [selectedEmploye, setSelectedEmploye] = useState(null);
   const [showAjoutModal, setShowAjoutModal] = useState(false);
   const [postes, setPostes] = useState([]);
-  
-  // Pour la pagination (à implémenter plus tard)
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 10,
-    total: 0
-  });
+
+  // Charger les informations de l'entreprise
+  useEffect(() => {
+    const chargerEntreprise = async () => {
+      try {
+        const response = await entrepriseService.getEntrepriseById(entrepriseId);
+        setEntreprise(response.data);
+      } catch (error) {
+        toast.error('Erreur lors du chargement de l\'entreprise');
+        navigate('/entreprises');
+      }
+    };
+
+    if (entrepriseId) {
+      chargerEntreprise();
+    }
+  }, [entrepriseId, navigate]);
 
   const loadEmployes = async () => {
     try {
       setLoading(true);
-      const entrepriseId = user.entrepriseId || 1; // Valeur par défaut si non disponible
-      
       const response = await employeService.getEmployes(entrepriseId, filtres);
       setEmployes(response.data);
       
@@ -56,8 +68,10 @@ const EmployesPage = () => {
   };
 
   useEffect(() => {
-    loadEmployes();
-  }, [filtres]);
+    if (entrepriseId) {
+      loadEmployes();
+    }
+  }, [filtres, entrepriseId]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -162,7 +176,7 @@ const EmployesPage = () => {
             style: 'currency',
             currency: 'XOF',
             minimumFractionDigits: 0
-          }).format(employe.salaireBase)}
+          }).format(employe.salaireBase || employe.tauxJournalier || 0)}
         </div>
       ),
     },
@@ -216,8 +230,25 @@ const EmployesPage = () => {
 
   return (
     <div className="space-y-6">
+      {/* En-tête avec retour */}
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Gestion des Employés</h1>
+        <div className="flex items-center space-x-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/entreprises')}
+            className="flex items-center"
+          >
+            <FaArrowLeft className="mr-2" /> Retour
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Employés - {entreprise?.nom}
+            </h1>
+            <p className="text-gray-600">
+              Gestion des employés de l'entreprise
+            </p>
+          </div>
+        </div>
         <div className="flex space-x-2">
           <Button 
             variant="outline"
@@ -227,7 +258,7 @@ const EmployesPage = () => {
             <FaFilter className="mr-2" /> Filtres
           </Button>
           
-          {isAdmin && (
+          {(user?.role === 'SUPER_ADMIN' || isAdmin) && (
             <Button 
               onClick={() => setShowAjoutModal(true)}
               className="flex items-center"
@@ -358,15 +389,15 @@ const EmployesPage = () => {
         employe={selectedEmploye}
       />
 
-      {/* Modal d'ajout d'employé */}
-      <FormulaireAjoutEmploye
+      {/* Modal d'ajout d'employé avec entreprise spécifique */}
+      <EmployeModalSuperAdmin
         isOpen={showAjoutModal}
         onClose={() => setShowAjoutModal(false)}
         onSuccess={handleAjoutSuccess}
-        entrepriseId={user?.entrepriseId}
+        entrepriseId={Number(entrepriseId)} // Passer l'ID de l'entreprise spécifique
       />
     </div>
   );
 };
 
-export default EmployesPage;
+export default EmployesEntreprisePage;
