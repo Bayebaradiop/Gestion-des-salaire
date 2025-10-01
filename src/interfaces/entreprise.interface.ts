@@ -5,6 +5,7 @@ export type PeriodePaie = PrismaPeriodePaie;
 export interface CreerEntrepriseDto {
   nom: string;
   logo?: string;
+  couleur?: string;
   adresse?: string;
   telephone?: string;
   email?: string;
@@ -15,6 +16,7 @@ export interface CreerEntrepriseDto {
 export interface ModifierEntrepriseDto {
   nom?: string;
   logo?: string;
+  couleur?: string;
   adresse?: string;
   telephone?: string;
   email?: string;
@@ -27,6 +29,7 @@ export interface EntrepriseAvecStats {
   id: number;
   nom: string;
   logo?: string | null;
+  couleur: string;
   adresse?: string | null;
   telephone?: string | null;
   email?: string | null;

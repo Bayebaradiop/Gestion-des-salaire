@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { PaiementProvider } from './context/PaiementContext';
+import { ThemeProvider } from './context/ThemeContext';
 import './index.css';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -12,10 +13,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <Router>
       <AuthProvider>
-        <PaiementProvider>
-          <App />
-          <ToastContainer position="top-right" autoClose={3000} />
-        </PaiementProvider>
+        <ThemeProvider>
+          <PaiementProvider>
+            <App />
+            <ToastContainer position="top-right" autoClose={3000} />
+          </PaiementProvider>
+        </ThemeProvider>
       </AuthProvider>
     </Router>
   </React.StrictMode>

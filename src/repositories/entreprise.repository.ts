@@ -5,6 +5,7 @@ import type { PeriodePaie as InterfacePeriodePaie } from '../interfaces/entrepri
 export interface CreerEntrepriseData {
   nom: string;
   logo?: string;
+  couleur?: string;
   adresse?: string;
   telephone?: string;
   email?: string;
@@ -15,6 +16,7 @@ export interface CreerEntrepriseData {
 export interface ModifierEntrepriseData {
   nom?: string;
   logo?: string;
+  couleur?: string;
   adresse?: string;
   telephone?: string;
   email?: string;
@@ -47,6 +49,7 @@ export class EntrepriseRepository extends BaseRepository {
       data: {
         nom: donnees.nom,
         logo: donnees.logo || null,
+        couleur: donnees.couleur || '#3B82F6',
         adresse: donnees.adresse || null,
         telephone: donnees.telephone || null,
         email: donnees.email || null,

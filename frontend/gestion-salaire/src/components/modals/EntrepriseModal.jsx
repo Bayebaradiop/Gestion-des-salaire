@@ -8,6 +8,7 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
   const [formData, setFormData] = useState({
     nom: '',
     logo: '',
+    couleur: '#3B82F6',
     adresse: '',
     telephone: '',
     email: '',
@@ -24,6 +25,7 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
       setFormData({
         nom: entreprise.nom || '',
         logo: entreprise.logo || '',
+        couleur: entreprise.couleur || '#3B82F6',
         adresse: entreprise.adresse || '',
         telephone: entreprise.telephone || '',
         email: entreprise.email || '',
@@ -34,6 +36,7 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
       setFormData({
         nom: '',
         logo: '',
+        couleur: '#3B82F6',
         adresse: '',
         telephone: '',
         email: '',
@@ -121,6 +124,34 @@ const EntrepriseModal = ({ isOpen, onClose, entreprise = null, onSuccess }) => {
           <label htmlFor="nom" className="block text-sm font-medium text-gray-700 mb-1">Nom de l'entreprise *</label>
           <input type="text" id="nom" name="nom" value={formData.nom} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Nom de l'entreprise" />
           {renderError('nom')}
+        </div>
+
+        <div>
+          <label htmlFor="couleur" className="block text-sm font-medium text-gray-700 mb-1">Couleur de l'entreprise *</label>
+          <div className="flex items-center space-x-3">
+            <input 
+              type="color" 
+              id="couleur" 
+              name="couleur" 
+              value={formData.couleur} 
+              onChange={handleChange} 
+              className="w-12 h-10 border border-gray-300 rounded cursor-pointer" 
+            />
+            <input 
+              type="text" 
+              value={formData.couleur} 
+              onChange={(e) => setFormData({...formData, couleur: e.target.value})}
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 font-mono text-sm" 
+              placeholder="#3B82F6"
+              pattern="^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$"
+            />
+            <div 
+              className="w-10 h-10 rounded border border-gray-300" 
+              style={{ backgroundColor: formData.couleur }}
+              title="Aperçu de la couleur"
+            ></div>
+          </div>
+          {renderError('couleur')}
         </div>
 
         <div>

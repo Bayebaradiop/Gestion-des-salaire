@@ -104,12 +104,14 @@ const EmployeModal = ({
 
     if (!formData.poste.trim()) newErrors.poste = 'Le poste est requis';
 
-    if (formData.typeContrat === 'FIXE' && (!formData.salaireBase || Number(formData.salaireBase) <= 0)) {
+    // Validation selon le type de contrat
+    if ((formData.typeContrat === 'FIXE' || formData.typeContrat === 'HONORAIRE') && 
+        (!formData.salaireBase || Number(formData.salaireBase) <= 0)) {
       newErrors.salaireBase = 'Salaire de base requis';
     }
-    if ((formData.typeContrat === 'JOURNALIER' || formData.typeContrat === 'HONORAIRE') &&
+    if (formData.typeContrat === 'JOURNALIER' &&
         (!formData.tauxJournalier || Number(formData.tauxJournalier) <= 0)) {
-      newErrors.tauxJournalier = 'Taux requis';
+      newErrors.tauxJournalier = 'Taux journalier requis';
     }
 
     if (!formData.dateEmbauche.trim()) newErrors.dateEmbauche = 'Date requise';
@@ -126,10 +128,17 @@ const EmployeModal = ({
     try {
       const submitData = {
         ...formData,
-        salaireBase: formData.salaireBase ? Number(formData.salaireBase) : undefined,
-        tauxJournalier: formData.tauxJournalier ? Number(formData.tauxJournalier) : undefined,
+        salaireBase: formData.salaireBase ? Number(formData.salaireBase) : null,
+        tauxJournalier: formData.tauxJournalier ? Number(formData.tauxJournalier) : null,
         entrepriseId: entrepriseId || (user?.role === "ADMIN" ? user?.entrepriseId : Number(formData.entrepriseId))
       };
+
+      // Ne pas envoyer les champs non requis selon le type de contrat
+      if (formData.typeContrat === 'JOURNALIER') {
+        delete submitData.salaireBase;
+      } else if (formData.typeContrat === 'FIXE' || formData.typeContrat === 'HONORAIRE') {
+        delete submitData.tauxJournalier;
+      }
 
       if (employe) {
         await employeService.modifierEmploye(employe.id, submitData);
@@ -290,19 +299,21 @@ const EmployeModal = ({
         {(formData.typeContrat === 'FIXE' || formData.typeContrat === 'HONORAIRE') && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Salaire de Base (XOF) *
+              {formData.typeContrat === 'FIXE' ? 'Salaire de Base (XOF) *' : 'Honoraire par Mission (XOF) *'}
             </label>
             <input
               type="number"
               name="salaireBase"
               value={formData.salaireBase}
               onChange={handleChange}
-              placeholder="Ex: 150000"
+              placeholder={formData.typeContrat === 'FIXE' ? "Ex: 150000" : "Ex: 50000"}
               min="1"
               step="1"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.salaireBase ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
             />
-            <p className="mt-1 text-xs text-gray-500">Salaire mensuel fixe</p>
+            <p className="mt-1 text-xs text-gray-500">
+              {formData.typeContrat === 'FIXE' ? 'Salaire mensuel fixe' : 'Montant par mission/projet'}
+            </p>
             {renderError('salaireBase')}
           </div>
         )}

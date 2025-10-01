@@ -146,7 +146,7 @@ export class AuthService {
     }
   }
 
-  async obtenirProfil(id: number): Promise<{ utilisateur: Omit<ReponseAuth['utilisateur'], never>; entreprise?: { nom: string; logo?: string } } | null> {
+  async obtenirProfil(id: number): Promise<{ utilisateur: Omit<ReponseAuth['utilisateur'], never>; entreprise?: { nom: string; logo?: string; couleur: string } } | null> {
     try {
       const utilisateur = await this.authRepository.trouverParId(id);
 
@@ -162,7 +162,8 @@ export class AuthService {
         if (entrepriseData) {
           entreprise = {
             nom: entrepriseData.nom,
-            logo: entrepriseData.logo || undefined
+            logo: entrepriseData.logo || undefined,
+            couleur: entrepriseData.couleur
           };
         }
       }

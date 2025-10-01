@@ -46,6 +46,11 @@ export const creerEntrepriseSchema = z.object({
     .length(3, "La devise doit contenir exactement 3 caractères (ex: XOF, EUR, USD)")
     .regex(/^[A-Z]{3}$/, "La devise doit être en majuscules (ex: XOF, EUR, USD)"),
   
+  couleur: z.string()
+    .min(1, "La couleur est requise")
+    .regex(/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, "La couleur doit être au format hexadécimal (ex: #FF5733, #333)")
+    .default("#3B82F6"),
+  
   periodePaie: z.enum(['MENSUELLE', 'HEBDOMADAIRE', 'JOURNALIERE'])
 });
 

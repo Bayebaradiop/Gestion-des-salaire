@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../context/ThemeContext';
 import authService from '../../services/auth.service';
 import { FaUserCircle, FaBuilding } from 'react-icons/fa';
 import { IoMdNotificationsOutline } from 'react-icons/io';
@@ -8,6 +9,7 @@ import { HiMenuAlt2 } from 'react-icons/hi';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { primaryColor } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [entrepriseInfo, setEntrepriseInfo] = useState(null);
 
@@ -40,7 +42,12 @@ const Navbar = () => {
             <HiMenuAlt2 size={24} />
           </button>
           <Link to="/dashboard" className="flex items-center">
-            <span className="text-xl font-bold text-blue-600">PayManager</span>
+            <span 
+              className="text-xl font-bold"
+              style={{ color: primaryColor }}
+            >
+              PayManager
+            </span>
           </Link>
           
           {/* Informations de l'entreprise pour ADMIN et CAISSIER */}
@@ -57,7 +64,10 @@ const Navbar = () => {
                   }}
                 />
               ) : (
-                <div className="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center">
+                <div 
+                  className="h-8 w-8 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: entrepriseInfo?.couleur || primaryColor }}
+                >
                   <FaBuilding className="text-white text-sm" />
                 </div>
               )}
@@ -93,7 +103,12 @@ const Navbar = () => {
                 <div className="px-4 py-2 border-b">
                   <p className="text-sm font-medium text-gray-900">{user?.prenom} {user?.nom}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
-                  <p className="text-xs font-medium text-blue-600 mt-1">{user?.role}</p>
+                  <p 
+                    className="text-xs font-medium mt-1"
+                    style={{ color: primaryColor }}
+                  >
+                    {user?.role}
+                  </p>
                 </div>
                 
                 {/* Informations entreprise sur mobile */}

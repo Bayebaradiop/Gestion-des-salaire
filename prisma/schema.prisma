@@ -21,6 +21,7 @@ model Entreprise {
    id              Int      @id @default(autoincrement())
    nom             String
    logo            String? @db.Text
+   couleur         String   @default("#3B82F6") // Couleur de l'entreprise (hex)
    adresse         String?
    telephone       String?
    email           String?

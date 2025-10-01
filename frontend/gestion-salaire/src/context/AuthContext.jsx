@@ -1,8 +1,17 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useState, useEffect, useContext } from 'react';
 import { toast } from 'react-toastify';
 import authService from '../services/auth.service';
 
 export const AuthContext = createContext();
+
+// Hook personnalisé pour utiliser le contexte d'authentification
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
