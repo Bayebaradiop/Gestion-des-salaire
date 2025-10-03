@@ -88,6 +88,7 @@ const EntreprisesPage = () => {
           <FaPlus className="mr-2" /> Ajouter une entreprise
         </Button>
       </div>
+      <div>djjdjjd</div>
 
       {isLoading ? (
         <div className="flex justify-center">
