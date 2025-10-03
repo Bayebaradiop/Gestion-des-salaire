@@ -59,6 +59,36 @@ export class PointageService {
     return res;
   }
 
+  async creerAbsence(payload: { 
+    entrepriseId: number; 
+    employeId: number; 
+    date: string; 
+    statut?: string; 
+    notes?: string; 
+    marqueAutomatiquement?: boolean 
+  }) {
+    const datePointage = new Date(payload.date);
+    const dateNormalisee = normalizeDateToMidnight(datePointage);
+
+    // Vérifier s'il existe déjà un pointage pour cet employé à cette date
+    const existant = await this.repo.trouverParEmployeEtDate(payload.employeId, dateNormalisee);
+    if (existant) {
+      throw new Error('Un pointage existe déjà pour cette date');
+    }
+
+    // Créer le pointage d'absence
+    const res = await this.repo.creerAbsence({
+      entrepriseId: payload.entrepriseId,
+      employeId: payload.employeId,
+      date: dateNormalisee,
+      statut: payload.statut || 'ABSENT',
+      notes: payload.notes,
+      marqueAutomatiquement: payload.marqueAutomatiquement || false
+    });
+
+    return res;
+  }
+
   async lister(entrepriseId: number, filters: { du?: string; au?: string; employeId?: number; statut?: string }) {
     const filtre: any = {};
     if (filters.employeId) filtre.employeId = filters.employeId;

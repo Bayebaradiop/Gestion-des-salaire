@@ -65,6 +65,23 @@ class PointageService {
   }
 
   /**
+   * Créer une absence automatique (pour marquage à 12h00)
+   * @param {Object} payload { entrepriseId, employeId, date, statut, notes, marqueAutomatiquement }
+   */
+  async creerAbsence({ entrepriseId, employeId, date, statut = 'ABSENT', notes, marqueAutomatiquement = true }) {
+    const response = await authService.axios.post('/pointages/absence', {
+      entrepriseId,
+      employeId,
+      date,
+      statut,
+      notes,
+      marqueAutomatiquement,
+      heureMarquage: new Date().toTimeString().slice(0, 8) // HH:MM:SS
+    });
+    return response.data;
+  }
+
+  /**
    * Exporter en PDF les pointages d'une période
    * @param {number} entrepriseId
    * @param {Object} options { du, au, filename? }

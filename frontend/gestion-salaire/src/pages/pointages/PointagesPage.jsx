@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { List, Clock, Plus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import pointageService from '../../services/pointage.service';
 import employeService from '../../services/employe.service';
@@ -49,6 +51,7 @@ const formatHHMM = (minutes) => {
 };
 
 export default function PointagesPage() {
+  const navigate = useNavigate();
   const { user, isAdmin, isSuperAdmin } = useAuth();
   const entrepriseId = user?.entrepriseId;
   const [loading, setLoading] = useState(true);
@@ -120,15 +123,34 @@ export default function PointagesPage() {
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-semibold text-gray-800">Pointages</h1>
-        {(isAdmin || isSuperAdmin) && (
+        
+        <div className="flex items-center gap-3">
           <button
-            onClick={handleExport}
-            disabled={loadingExport}
-            className="btn-gradient disabled:opacity-60"
+            onClick={() => navigate('/pointages/enregistrement')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
           >
-            {loadingExport ? 'Export...' : 'Exporter PDF'}
+            <Plus className="w-4 h-4" />
+            Nouveau Pointage
           </button>
-        )}
+          
+          <button
+            onClick={() => navigate('/pointages/liste')}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+          >
+            <List className="w-4 h-4" />
+            Liste Complète
+          </button>
+          
+          {(isAdmin || isSuperAdmin) && (
+            <button
+              onClick={handleExport}
+              disabled={loadingExport}
+              className="btn-gradient disabled:opacity-60"
+            >
+              {loadingExport ? 'Export...' : 'Exporter PDF'}
+            </button>
+          )}
+        </div>
       </div>
 
       <form onSubmit={applyFilters} className="card card-hover mb-4 grid grid-cols-1 md:grid-cols-5 gap-3">

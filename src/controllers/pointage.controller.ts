@@ -32,6 +32,23 @@ export class PointageController {
     }
   }
 
+  async creerAbsence(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { entrepriseId, employeId, date, statut, notes, marqueAutomatiquement } = req.body;
+      const result = await this.service.creerAbsence({
+        entrepriseId: Number(entrepriseId),
+        employeId: Number(employeId),
+        date,
+        statut: statut || 'ABSENT',
+        notes,
+        marqueAutomatiquement: marqueAutomatiquement || false
+      });
+      res.status(201).json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async lister(req: Request, res: Response, next: NextFunction) {
     try {
       const { entrepriseId } = req.params;

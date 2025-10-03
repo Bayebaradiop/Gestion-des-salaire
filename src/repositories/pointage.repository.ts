@@ -26,6 +26,15 @@ export interface ClockOutData {
   notes?: string; // Optionnel
 }
 
+export interface CreerAbsenceData {
+  entrepriseId: number;
+  employeId: number;
+  date: Date; // Jour normalisé (00:00)
+  statut: StatutPointage; // ABSENT, CONGE, MALADIE, etc.
+  notes?: string;
+  marqueAutomatiquement?: boolean;
+}
+
 export class PointageRepository extends BaseRepository {
   async trouverParId(id: number) {
     return this.prisma.pointage.findUnique({
@@ -120,6 +129,21 @@ export class PointageRepository extends BaseRepository {
       ],
       include: {
         employe: true,
+      }
+    });
+  }
+
+  async creerAbsence(data: CreerAbsenceData) {
+    return this.prisma.pointage.create({
+      data: {
+        entrepriseId: data.entrepriseId,
+        employeId: data.employeId,
+        date: data.date,
+        statut: data.statut,
+        notes: data.notes,
+        heureArrivee: null, // Pas d'arrivée pour une absence
+        heureDepart: null,  // Pas de départ pour une absence
+        dureeMinutes: 0,    // 0 minute travaillée
       }
     });
   }

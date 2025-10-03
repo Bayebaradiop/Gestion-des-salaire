@@ -1,0 +1,174 @@
+// === PRISMA SCHEMA pour Pointages ===
+// Ajouter à votre fichier prisma/schema.prisma existant
+
+model Pointage {
+  id                Int       @id @default(autoincrement())
+  employe           Employe   @relation(fields: [employeId], references: [id], onDelete: Cascade)
+  employeId         Int
+  
+  date              DateTime  @db.Date
+  heureArrivee      String?   // Format HH:MM:SS
+  heureDepart       String?   // Format HH:MM:SS
+  
+  dureeMinutes      Int?      // Durée totale en minutes
+  statut            StatutPointage @default(PRESENT)
+  
+  retardMinutes     Int       @default(0)
+  heuresSupMinutes  Int       @default(0)
+  
+  commentaire       String?   @db.Text
+  valide            Boolean   @default(true)  // false si CAS_PARTICULIER
+  
+  // Géolocalisation (optionnel)
+  latitude          Float?
+  longitude         Float?
+  
+  // Photo (optionnel)
+  photoUrl          String?
+  
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  
+  @@unique([employeId, date], name: "pointage_employe_date_unique")
+  @@index([employeId])
+  @@index([date])
+  @@index([statut])
+  @@map("pointages")
+}
+
+enum StatutPointage {
+  PRESENT
+  ABSENT
+  RETARD
+  HEURES_SUP
+  CAS_PARTICULIER
+  CONGE
+  MALADIE
+  TELETRAVAIL
+}
+
+// === MIGRATION SQL (MySQL/PostgreSQL) ===
+// npx prisma migrate dev --name add_pointages
+
+/*
+CREATE TABLE pointages (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  employe_id INT NOT NULL,
+  date DATE NOT NULL,
+  heure_arrivee TIME NULL,
+  heure_depart TIME NULL,
+  duree_minutes INT NULL,
+  statut ENUM('PRESENT', 'ABSENT', 'RETARD', 'HEURES_SUP', 'CAS_PARTICULIER', 'CONGE', 'MALADIE', 'TELETRAVAIL') DEFAULT 'PRESENT',
+  retard_minutes INT DEFAULT 0,
+  heures_sup_minutes INT DEFAULT 0,
+  commentaire TEXT NULL,
+  valide BOOLEAN DEFAULT TRUE,
+  latitude DECIMAL(10, 8) NULL,
+  longitude DECIMAL(11, 8) NULL,
+  photo_url VARCHAR(255) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY pointage_employe_date_unique (employe_id, date),
+  INDEX idx_employe_id (employe_id),
+  INDEX idx_date (date),
+  INDEX idx_statut (statut),
+  FOREIGN KEY (employe_id) REFERENCES employes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+*/
+
+// === SEED DATA (pour tests) ===
+// prisma/seed-pointages.ts
+
+import { PrismaClient, StatutPointage } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
+async function seedPointages() {
+  console.log('🌱 Seeding pointages...');
+
+  const employes = await prisma.employe.findMany({ take: 5 });
+
+  if (employes.length === 0) {
+    console.log('⚠️  Aucun employé trouvé, créez des employés d\'abord');
+    return;
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const pointagesData = [
+    {
+      employeId: employes[0].id,
+      date: new Date(today),
+      heureArrivee: '08:00:00',
+      heureDepart: '17:00:00',
+      dureeMinutes: 540,
+      statut: StatutPointage.PRESENT,
+      retardMinutes: 0,
+      heuresSupMinutes: 0,
+      valide: true
+    },
+    {
+      employeId: employes[1].id,
+      date: new Date(today),
+      heureArrivee: null,
+      heureDepart: null,
+      dureeMinutes: 0,
+      statut: StatutPointage.ABSENT,
+      retardMinutes: 0,
+      heuresSupMinutes: 0,
+      commentaire: 'Congé maladie',
+      valide: true
+    },
+    {
+      employeId: employes[2].id,
+      date: new Date(today),
+      heureArrivee: '08:27:00',
+      heureDepart: '17:00:00',
+      dureeMinutes: 513,
+      statut: StatutPointage.RETARD,
+      retardMinutes: 27,
+      heuresSupMinutes: 0,
+      commentaire: 'Embouteillage',
+      valide: true
+    },
+    {
+      employeId: employes[3].id,
+      date: new Date(today),
+      heureArrivee: '08:00:00',
+      heureDepart: '20:15:00',
+      dureeMinutes: 735,
+      statut: StatutPointage.HEURES_SUP,
+      retardMinutes: 0,
+      heuresSupMinutes: 195,
+      commentaire: 'Projet urgent',
+      valide: true
+    },
+    {
+      employeId: employes[4].id,
+      date: new Date(today),
+      heureArrivee: '08:00:00',
+      heureDepart: null,
+      dureeMinutes: null,
+      statut: StatutPointage.CAS_PARTICULIER,
+      retardMinutes: 0,
+      heuresSupMinutes: 0,
+      commentaire: 'Oubli badge départ - À corriger',
+      valide: false
+    }
+  ];
+
+  for (const data of pointagesData) {
+    await prisma.pointage.create({ data });
+  }
+
+  console.log(`✅ ${pointagesData.length} pointages créés avec succès`);
+}
+
+seedPointages()
+  .catch((e) => {
+    console.error('❌ Erreur seed:', e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });
