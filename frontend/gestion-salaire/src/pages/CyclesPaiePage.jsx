@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import { FaPlus, FaEdit, FaTrash, FaFileAlt, FaCheck, FaLock } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Plus, Edit, Trash2, FileText, Check, Lock, Calendar,
+  Clock, TrendingUp, AlertCircle, CheckCircle2, XCircle,
+  Building2, Filter, Download, Search, Sparkles
+} from 'lucide-react';
 import Button from '../components/ui/Button';
+import Card, { StatCard, Badge } from '../components/ui/Card';
 import CyclePaieModal from '../components/modals/CyclePaieModal';
 import cyclePaieService from '../services/cyclePaie.service';
 import entrepriseService from '../services/entreprise.service';
@@ -155,150 +161,309 @@ const CyclesPaiePage = () => {
     return entreprise ? entreprise.nom : 'Inconnue';
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Gestion des cycles de paie</h1>
-        <Button 
-          onClick={handleAddCycle}
-          variant="primary"
-          className="flex items-center"
-        >
-          <FaPlus className="mr-2" /> Ajouter un cycle
-        </Button>
-      </div>
+  // Calculer les statistiques
+  const stats = {
+    total: cycles.length,
+    enCours: cycles.filter(c => !c.estCloture && !c.estApprouve).length,
+    approuves: cycles.filter(c => c.estApprouve && !c.estCloture).length,
+    clotures: cycles.filter(c => c.estCloture).length
+  };
 
-      {isLoading ? (
-        <div className="flex justify-center">
-          <p className="text-gray-500">Chargement en cours...</p>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+      {/* Premium Header */}
+      <motion.div
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-lg border-b-2 border-gray-200 dark:border-gray-800 sticky top-0 z-40"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-extrabold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent flex items-center gap-3">
+                <Calendar className="w-8 h-8 text-indigo-600" />
+                Gestion des Cycles de Paie
+                <Sparkles className="w-6 h-6 text-purple-600" />
+              </h1>
+              <p className="mt-2 text-base font-semibold text-gray-600 dark:text-gray-400">
+                Gérez vos cycles de paie, générez et approuvez les bulletins
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button variant="outline" size="lg" icon={<Search className="w-5 h-5" />}>
+                Rechercher
+              </Button>
+              <Button variant="outline" size="lg" icon={<Filter className="w-5 h-5" />}>
+                Filtrer
+              </Button>
+              <Button 
+                onClick={handleAddCycle}
+                variant="primary"
+                size="lg"
+                icon={<Plus className="w-5 h-5" />}
+              >
+                Nouveau Cycle
+              </Button>
+            </div>
+          </div>
         </div>
-      ) : cycles.length === 0 ? (
-        <div className="bg-white p-6 rounded-lg shadow-md text-center">
-          <p className="text-gray-500">Aucun cycle de paie trouvé</p>
-          <Button 
-            onClick={handleAddCycle}
-            variant="outline"
-            className="mt-4"
+      </motion.div>
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Premium Statistics */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+        >
+          <StatCard
+            title="Total Cycles"
+            value={stats.total}
+            change="Tous les cycles"
+            trend="neutral"
+            icon={<Calendar className="w-7 h-7" />}
+            color="indigo"
+          />
+          <StatCard
+            title="En Cours"
+            value={stats.enCours}
+            change="Non approuvés"
+            trend="neutral"
+            icon={<Clock className="w-7 h-7" />}
+            color="amber"
+          />
+          <StatCard
+            title="Approuvés"
+            value={stats.approuves}
+            change="En attente clôture"
+            trend="up"
+            icon={<CheckCircle2 className="w-7 h-7" />}
+            color="emerald"
+          />
+          <StatCard
+            title="Clôturés"
+            value={stats.clotures}
+            change="Finalisés"
+            trend="up"
+            icon={<Lock className="w-7 h-7" />}
+            color="purple"
+          />
+        </motion.div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center min-h-[400px]">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+              className="w-16 h-16 border-4 border-indigo-600 border-t-transparent rounded-full"
+            />
+          </div>
+        ) : cycles.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
           >
-            Créer votre premier cycle de paie
-          </Button>
-        </div>
-      ) : (
-        <div className="overflow-x-auto bg-white rounded-lg shadow">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Période</th>
-                {isAdmin && (
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Entreprise</th>
-                )}
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dates</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {cycles.map((cycle) => (
-                <tr key={cycle.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {getMoisName(cycle.mois)} {cycle.annee}
-                    </div>
-                  </td>
-                  
-                  {isAdmin && (
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {getEntrepriseName(cycle.entrepriseId)}
-                      </div>
-                    </td>
-                  )}
-                  
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
-                      Du {formatDate(cycle.dateDebut)} au {formatDate(cycle.dateFin)}
-                    </div>
-                  </td>
-                  
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {cycle.estCloture ? (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
-                        Clôturé
-                      </span>
-                    ) : cycle.estApprouve ? (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                        Approuvé
-                      </span>
-                    ) : cycle.bulletinsGeneres ? (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        Bulletins générés
-                      </span>
-                    ) : (
-                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                        En attente
-                      </span>
-                    )}
-                  </td>
-                  
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
-                      {!cycle.estCloture && !cycle.estApprouve && (
-                        <button
-                          onClick={() => handleEditCycle(cycle)}
-                          className="text-blue-600 hover:text-blue-900"
-                          title="Modifier"
-                        >
-                          <FaEdit />
-                        </button>
+            <Card variant="gradient" className="p-16 text-center">
+              <div className="inline-flex p-6 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-3xl mb-6">
+                <Calendar className="w-20 h-20 text-indigo-600" />
+              </div>
+              <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-3">
+                Aucun cycle de paie
+              </h2>
+              <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-8 max-w-md mx-auto">
+                Commencez par créer votre premier cycle de paie pour gérer les salaires de vos employés
+              </p>
+              <Button 
+                onClick={handleAddCycle}
+                variant="primary"
+                size="lg"
+                icon={<Plus className="w-5 h-5" />}
+              >
+                Créer le Premier Cycle
+              </Button>
+            </Card>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card variant="gradient" className="p-8">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
+                  <Calendar className="w-7 h-7 text-indigo-600" />
+                  Liste des Cycles
+                </h2>
+                <Button variant="outline" size="lg" icon={<Download className="w-5 h-5" />}>
+                  Exporter
+                </Button>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y-2 divide-gray-200 dark:divide-gray-700 border-2 border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-lg">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
+                    <tr>
+                      <th className="px-6 py-5 text-left text-sm font-extrabold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                        Période
+                      </th>
+                      {isAdmin && (
+                        <th className="px-6 py-5 text-left text-sm font-extrabold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                          Entreprise
+                        </th>
                       )}
-                      
-                      {!cycle.bulletinsGeneres && !cycle.estCloture && !cycle.estApprouve && (
-                        <button
-                          onClick={() => handleDeleteCycle(cycle.id)}
-                          className="text-red-600 hover:text-red-900"
-                          title="Supprimer"
+                      <th className="px-6 py-5 text-left text-sm font-extrabold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                        Dates
+                      </th>
+                      <th className="px-6 py-5 text-left text-sm font-extrabold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                        Statut
+                      </th>
+                      <th className="px-6 py-5 text-right text-sm font-extrabold text-gray-700 dark:text-gray-200 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-gray-900 divide-y-2 divide-gray-200 dark:divide-gray-700">
+                    <AnimatePresence>
+                      {cycles.map((cycle, index) => (
+                        <motion.tr
+                          key={cycle.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 20 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                         >
-                          <FaTrash />
-                        </button>
-                      )}
-                      
-                      {!cycle.bulletinsGeneres && !cycle.estCloture && (
-                        <button
-                          onClick={() => handleGenererBulletins(cycle.id)}
-                          className="text-green-600 hover:text-green-900"
-                          title="Générer les bulletins"
-                        >
-                          <FaFileAlt />
-                        </button>
-                      )}
-                      
-                      {cycle.bulletinsGeneres && !cycle.estApprouve && !cycle.estCloture && (
-                        <button
-                          onClick={() => handleApprouverCycle(cycle.id)}
-                          className="text-amber-600 hover:text-amber-900"
-                          title="Approuver"
-                        >
-                          <FaCheck />
-                        </button>
-                      )}
-                      
-                      {cycle.estApprouve && !cycle.estCloture && (
-                        <button
-                          onClick={() => handleCloturerCycle(cycle.id)}
-                          className="text-gray-600 hover:text-gray-900"
-                          title="Clôturer"
-                        >
-                          <FaLock />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/30 dark:to-purple-900/30 rounded-lg">
+                                <Calendar className="w-5 h-5 text-indigo-600" />
+                              </div>
+                              <div>
+                                <div className="text-base font-extrabold text-gray-900 dark:text-white">
+                                  {getMoisName(cycle.mois)} {cycle.annee}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          
+                          {isAdmin && (
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-gray-400" />
+                                <span className="text-base font-bold text-gray-900 dark:text-white">
+                                  {getEntrepriseName(cycle.entrepriseId)}
+                                </span>
+                              </div>
+                            </td>
+                          )}
+                          
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-base font-semibold text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                              <Clock className="w-4 h-4" />
+                              Du {formatDate(cycle.dateDebut)} au {formatDate(cycle.dateFin)}
+                            </div>
+                          </td>
+                          
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {cycle.estCloture ? (
+                              <Badge variant="default">
+                                <Lock className="w-3 h-3 mr-1" />
+                                Clôturé
+                              </Badge>
+                            ) : cycle.estApprouve ? (
+                              <Badge variant="success">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                Approuvé
+                              </Badge>
+                            ) : cycle.bulletinsGeneres ? (
+                              <Badge variant="primary">
+                                <FileText className="w-3 h-3 mr-1" />
+                                Bulletins générés
+                              </Badge>
+                            ) : (
+                              <Badge variant="warning">
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                En attente
+                              </Badge>
+                            )}
+                          </td>
+                          
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex justify-end gap-2">
+                              {!cycle.estCloture && !cycle.estApprouve && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleEditCycle(cycle)}
+                                  className="p-2 text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-all"
+                                  title="Modifier"
+                                >
+                                  <Edit className="w-5 h-5" />
+                                </motion.button>
+                              )}
+                              
+                              {!cycle.bulletinsGeneres && !cycle.estCloture && !cycle.estApprouve && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleDeleteCycle(cycle.id)}
+                                  className="p-2 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 bg-red-50 dark:bg-red-900/20 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 transition-all"
+                                  title="Supprimer"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </motion.button>
+                              )}
+                              
+                              {!cycle.bulletinsGeneres && !cycle.estCloture && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleGenererBulletins(cycle.id)}
+                                  className="p-2 text-emerald-600 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-all"
+                                  title="Générer les bulletins"
+                                >
+                                  <FileText className="w-5 h-5" />
+                                </motion.button>
+                              )}
+                              
+                              {cycle.bulletinsGeneres && !cycle.estApprouve && !cycle.estCloture && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleApprouverCycle(cycle.id)}
+                                  className="p-2 text-amber-600 hover:text-amber-900 dark:text-amber-400 dark:hover:text-amber-300 bg-amber-50 dark:bg-amber-900/20 rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900/40 transition-all"
+                                  title="Approuver"
+                                >
+                                  <Check className="w-5 h-5" />
+                                </motion.button>
+                              )}
+                              
+                              {cycle.estApprouve && !cycle.estCloture && (
+                                <motion.button
+                                  whileHover={{ scale: 1.1 }}
+                                  whileTap={{ scale: 0.95 }}
+                                  onClick={() => handleCloturerCycle(cycle.id)}
+                                  className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300 bg-gray-50 dark:bg-gray-900/20 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900/40 transition-all"
+                                  title="Clôturer"
+                                >
+                                  <Lock className="w-5 h-5" />
+                                </motion.button>
+                              )}
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+          </motion.div>
+        )}
+      </div>
 
       {/* Modal pour ajouter/éditer un cycle */}
       <CyclePaieModal

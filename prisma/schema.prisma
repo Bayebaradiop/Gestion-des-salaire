@@ -35,6 +35,7 @@ model Entreprise {
    utilisateurs    Utilisateur[]
    employes        Employe[]
    cyclesPaie      CyclePaie[]
+   pointages       Pointage[]
 
    @@map("entreprises")
 }
@@ -84,6 +85,7 @@ model Employe {
   entrepriseId    Int
   entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
   bulletinsPaie   BulletinPaie[]
+  pointages       Pointage[]
 
   @@unique([entrepriseId, codeEmploye])
   @@map("employes")
@@ -167,6 +169,32 @@ model Paiement {
 }
 
 // ================================
+// GESTION DES POINTAGES (PRÉSENCE/ABSENCE)
+// ================================
+
+model Pointage {
+  id             Int       @id @default(autoincrement())
+  date           DateTime  // Jour du pointage
+  heureArrivee   DateTime?
+  heureDepart    DateTime?
+  dureeMinutes   Int?
+  statut         StatutPointage @default(PRESENT) // Présent, absent, retard, etc.
+  notes          String?
+  creeLe         DateTime @default(now())
+  misAJourLe     DateTime @updatedAt
+
+  // Relations
+  employeId      Int
+  employe        Employe    @relation(fields: [employeId], references: [id], onDelete: Cascade)
+  entrepriseId   Int
+  entreprise     Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
+
+  @@unique([employeId, date])
+  @@index([entrepriseId, date])
+  @@map("pointages")
+}
+
+// ================================
 // ENUMS
 // ================================
 
@@ -206,4 +234,13 @@ enum MethodePaiement {
   ORANGE_MONEY // Orange Money
   WAVE         // Wave
   AUTRE        // Autre
+}
+
+enum StatutPointage {
+  PRESENT
+  ABSENT
+  RETARD
+  CONGE
+  MALADIE
+  TELETRAVAIL
 }

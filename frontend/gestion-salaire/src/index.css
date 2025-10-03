@@ -1,3 +1,6 @@
+@import './styles/design-tokens.css';
+@import './styles/design-system.css';
+@import './styles/readability-fixes.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,7 +78,9 @@ body {
   }
 
   .card {
-    @apply bg-white rounded-lg shadow p-6;
+    @apply bg-white rounded-xl p-6 shadow;
+    background-image: radial-gradient(circle at 10% 5%, rgba(59, 130, 246, 0.06) 0%, transparent 25%), radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.06) 0%, transparent 25%);
+    border: 1px solid rgba(0,0,0,0.04);
   }
 
   /* Classes utilitaires pour les couleurs d'entreprise */

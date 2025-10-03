@@ -147,7 +147,7 @@ const CyclePaieModal = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Mois */}
           <div>
-            <label htmlFor="mois" className="block text-sm font-medium text-gray-700 mb-1">
+  <label htmlFor="mois" className="block text-base font-semibold text-gray-800 mb-2">
               Mois *
             </label>
             <select

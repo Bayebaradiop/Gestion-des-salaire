@@ -13,6 +13,7 @@ import cyclePaieRoutes from './routes/cyclePaie.routes.js';
 import bulletinPaieRoutes from './routes/bulletinPaie.routes.js';
 import paiementRoutes from './routes/paiement.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
+import pointageRoutes from './routes/pointage.routes.js';
 
 import { errorHandler, notFoundHandler, requestLogger, securityHeaders } from './middleware/errorHandler.js';
 
@@ -59,6 +60,7 @@ app.use('/api', cyclePaieRoutes);
 app.use('/api', bulletinPaieRoutes); 
 app.use('/api', paiementRoutes); 
 app.use('/api', dashboardRoutes); 
+app.use('/api', pointageRoutes); 
 
 // Route de test
 app.get('/', (req, res) => {

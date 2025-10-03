@@ -1,10 +1,13 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import LoginPage from './pages/auth/LoginPage';
+import PremiumLoginPage from './pages/auth/PremiumLoginPage';
 import Dashboard from './pages/dashboard/Dashboard';
+import PremiumDashboard from './pages/dashboard/PremiumDashboard';
 import DashboardSalairePage from './pages/dashboard/DashboardSalairePage';
 import EmployesPage from './pages/employes/EmployesPage';
 import AjoutEmployePage from './pages/employes/AjoutEmployePage';
+import PremiumAjoutEmployePage from './pages/employes/PremiumAjoutEmployePage';
 import CyclesPage from './pages/cycles/CyclesPage';
 import CreerCyclePage from './pages/cycles/CreerCyclePage';
 import BulletinsPage from './pages/cycles/BulletinsPage';
@@ -18,6 +21,8 @@ import ConsultationBulletins from './pages/ConsultationBulletins';
 import Layout from './components/layout/Layout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import DebugModal from './components/debug/DebugModal';
+import PointagesPage from './pages/pointages/PointagesPage';
+import EnregistrementPointage from './pages/pointages/EnregistrementPointage';
 
 function App() {
   const { user, loading } = useAuth();
@@ -35,20 +40,20 @@ function App() {
     if (!user) return '/login';
     if (user.role === 'CAISSIER') return '/caissier';
     if (user.role === 'SUPER_ADMIN') return '/super-admin';
-    return '/dashboard';
+    return '/dashboard'; // Route vers le dashboard premium par défaut
   };
 
   return (
     <>
       <Routes>
-        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to={getDefaultRoute()} />} />
+        <Route path="/login" element={!user ? <PremiumLoginPage /> : <Navigate to={getDefaultRoute()} />} />
         
         <Route element={<ProtectedRoute />}>
           <Route element={<Layout />}>
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<PremiumDashboard />} />
             <Route path="/dashboard/salaires" element={<DashboardSalairePage />} />
             <Route path="/employes" element={<EmployesPage />} />
-            <Route path="/employes/ajouter" element={<AjoutEmployePage />} />
+            <Route path="/employes/ajouter" element={<PremiumAjoutEmployePage />} />
             <Route path="/cycles" element={<CyclesPage />} />
             <Route path="/cycles/creer" element={<CreerCyclePage />} />
             <Route path="/cycles/:cycleId/bulletins" element={<BulletinsPage />} />
@@ -58,8 +63,11 @@ function App() {
             <Route path="/super-admin/entreprises/:entrepriseId/employes" element={<EmployesEntreprisePage />} />
             <Route path="/caissier" element={<CaissierDashboard />} />
             <Route path="/caissier/bulletins" element={<ConsultationBulletins />} />
-            <Route path="/" element={<Navigate to={getDefaultRoute()} />} />
-            <Route path="*" element={<Navigate to={getDefaultRoute()} />} />
+            <Route path="/pointages" element={<PointagesPage />} />
+            <Route path="/pointages/enregistrement" element={<EnregistrementPointage />} />
+            <Route path="/" element={<Navigate to="/dashboard" />} />
+            <Route path="/home" element={<Navigate to="/dashboard" />} />
+            <Route path="*" element={<Navigate to="/dashboard" />} />
           </Route>
         </Route>
       </Routes>

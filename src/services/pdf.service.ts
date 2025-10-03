@@ -616,6 +616,188 @@ export class PDFService {
   }
 
   /**
+   * Rapport des pointages (présence/absence)
+   */
+  static async genererRapportPointages(pointages: any[], entreprise: any, du: string, au: string): Promise<Buffer> {
+    const html = this.getRapportPointagesTemplate(pointages, entreprise, du, au);
+    return await this.generatePDF(html, { format: 'A4', orientation: 'landscape' });
+  }
+
+  private static getRapportPointagesTemplate(pointages: any[], entreprise: any, du: string, au: string): string {
+    const periodeLabel = `${du} au ${au}`;
+    const dateGeneration = new Date().toLocaleString('fr-FR');
+
+    // Pré-calculs
+    const totalMinutes = pointages.reduce((sum, p) => sum + (p.dureeMinutes || 0), 0);
+    const totalHeures = this.minutesToHHMM(totalMinutes);
+
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Rapport des Pointages - ${periodeLabel}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 15px;
+            font-size: 10px;
+            line-height: 1.35;
+          }
+          .header {
+            text-align: center;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+          }
+          .title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+            background-color: #f0f0f0;
+            padding: 10px;
+            text-align: center;
+          }
+          .summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 12px 0;
+          }
+          .card {
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            background-color: #fafafa;
+            text-align: center;
+          }
+          .card .value { font-weight: bold; font-size: 13px; }
+          .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+          }
+          .table th, .table td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+          }
+          .table th { background-color: #f8f9fa; }
+          .number { text-align: right; }
+          .center { text-align: center; }
+          .status-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 9px;
+            font-weight: 600;
+            color: #fff;
+          }
+          .status-PRESENT { background-color: #10b981; }
+          .status-RETARD { background-color: #f59e0b; }
+          .status-ABSENT { background-color: #ef4444; }
+          .status-CONGE { background-color: #3b82f6; }
+          .status-MALADIE { background-color: #8b5cf6; }
+          .status-TELETRAVAIL { background-color: #06b6d4; }
+          .footer {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 9px;
+            color: #666;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h2 style="margin:0;">${entreprise.nom}</h2>
+          ${entreprise.adresse ? `<p style="margin:4px 0;">${entreprise.adresse}</p>` : ''}
+          ${entreprise.telephone ? `<p style="margin:4px 0;">Tél: ${entreprise.telephone}</p>` : ''}
+          ${entreprise.email ? `<p style="margin:4px 0;">Email: ${entreprise.email}</p>` : ''}
+        </div>
+
+        <div class="title">RAPPORT DES POINTAGES • ${periodeLabel}</div>
+
+        <div class="summary">
+          <div class="card">
+            <div>Période</div>
+            <div class="value">${periodeLabel}</div>
+          </div>
+          <div class="card">
+            <div>Enregistrements</div>
+            <div class="value">${pointages.length}</div>
+          </div>
+          <div class="card">
+            <div>Total heures (calculées)</div>
+            <div class="value">${totalHeures}</div>
+          </div>
+          <div class="card">
+            <div>Généré le</div>
+            <div class="value">${dateGeneration}</div>
+          </div>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Employé</th>
+              <th>Code</th>
+              <th class="center">Arrivée</th>
+              <th class="center">Départ</th>
+              <th class="center">Durée</th>
+              <th class="center">Statut</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${pointages.map(p => `
+              <tr>
+                <td class="center">${new Date(p.date).toLocaleDateString('fr-FR')}</td>
+                <td>${p.employe?.prenom || ''} ${p.employe?.nom || ''}</td>
+                <td class="center">${p.employe?.codeEmploye || ''}</td>
+                <td class="center">${p.heureArrivee ? new Date(p.heureArrivee).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                <td class="center">${p.heureDepart ? new Date(p.heureDepart).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                <td class="center">${p.dureeMinutes ? this.minutesToHHMM(p.dureeMinutes) : '-'}</td>
+                <td class="center">
+                  <span class="status-badge status-${p.statut}">${this.getStatutPointageLabel(p.statut)}</span>
+                </td>
+                <td>${p.notes || ''}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          <p>Rapport généré le ${dateGeneration} • Système de Gestion de Paie - ${entreprise.nom}</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  private static minutesToHHMM(minutes: number): string {
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    const hh = h.toString().padStart(2, '0');
+    const mm = m.toString().padStart(2, '0');
+    return `${hh}h${mm}`;
+  }
+
+  private static getStatutPointageLabel(statut: string): string {
+    const labels: Record<string, string> = {
+      'PRESENT': 'Présent',
+      'ABSENT': 'Absent',
+      'RETARD': 'Retard',
+      'CONGE': 'Congé',
+      'MALADIE': 'Maladie',
+      'TELETRAVAIL': 'Télétravail'
+    };
+    return labels[statut] || statut;
+  }
+
+  /**
    * Utilitaires
    */
   private static getMethodePaiementLabel(methode: string): string {
