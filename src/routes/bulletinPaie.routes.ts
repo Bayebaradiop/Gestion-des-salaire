@@ -28,6 +28,12 @@ router.get('/bulletins/:id/details',
   (req, res, next) => bulletinPaieController.obtenirAvecDetails(req, res, next)
 );
 
+// GET /bulletins/:id/avec-absences - Obtenir un bulletin avec informations d'absences
+router.get('/bulletins/:id/avec-absences',
+  autoriserRoles("SUPER_ADMIN", "ADMIN", "CAISSIER"),
+  (req, res, next) => bulletinPaieController.obtenirAvecAbsences(req, res, next)
+);
+
 // PUT /bulletins/:id - Modifier un bulletin
 router.put('/bulletins/:id',
   autoriserRoles("SUPER_ADMIN", "ADMIN"),

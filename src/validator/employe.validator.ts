@@ -67,6 +67,10 @@ export const creerEmployeSchema = z.object({
   tauxJournalier: z.number()
     .positive("Le taux journalier doit être supérieur à 0")
     .optional(),
+    
+  tauxHoraire: z.number()
+    .positive("Le taux horaire doit être supérieur à 0")
+    .optional(),
   
   dateEmbauche: dateEmbaucheValidation,
   
@@ -90,13 +94,13 @@ export const creerEmployeSchema = z.object({
   if (data.typeContrat === 'JOURNALIER' && (!data.tauxJournalier || data.tauxJournalier <= 0)) {
     return false;
   }
-  if (data.typeContrat === 'HONORAIRE' && (!data.salaireBase || data.salaireBase <= 0)) {
+  if (data.typeContrat === 'HONORAIRE' && (!data.tauxHoraire || data.tauxHoraire <= 0)) {
     return false;
   }
   return true;
 }, {
-  message: "Le salaire de base est requis pour les contrats fixes et honoraires, le taux journalier pour les contrats journaliers",
-  path: ["salaireBase", "tauxJournalier"] // Indiquer les champs concernés
+  message: "Le salaire de base est requis pour les contrats fixes, le taux journalier pour les journaliers, et le taux horaire pour les honoraires",
+  path: ["salaireBase", "tauxJournalier", "tauxHoraire"] // Indiquer les champs concernés
 });
 
 // Schema pour la modification d'employé

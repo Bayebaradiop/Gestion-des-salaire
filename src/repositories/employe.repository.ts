@@ -12,6 +12,7 @@ export interface Employe {
   typeContrat: TypeContrat;
   salaireBase?: number | null;
   tauxJournalier?: number | null;
+  tauxHoraire?: number | null;
   compteBancaire?: string | null;
   estActif: boolean;
   dateEmbauche: Date;
@@ -30,6 +31,7 @@ export interface CreerEmployeData {
   typeContrat: TypeContrat;
   salaireBase?: number;
   tauxJournalier?: number;
+  tauxHoraire?: number;
   compteBancaire?: string;
   dateEmbauche: Date;
   entrepriseId: number;
@@ -44,6 +46,7 @@ export interface ModifierEmployeData {
   typeContrat?: TypeContrat;
   salaireBase?: number;
   tauxJournalier?: number;
+  tauxHoraire?: number;
   compteBancaire?: string;
   estActif?: boolean;
 }

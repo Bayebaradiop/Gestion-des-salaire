@@ -12,11 +12,12 @@ import employeRoutes from './routes/employe.routes.js';
 import cyclePaieRoutes from './routes/cyclePaie.routes.js';
 import bulletinPaieRoutes from './routes/bulletinPaie.routes.js';
 import paiementRoutes from './routes/paiement.routes.js';
-import paiementAutomatiseRoutes from './routes/paiementAutomatise.routes.js';
-import paiementJournalierRoutes from './routes/paiementJournalier.routes.js';
+import paiementAutomatiqueRoutes from './routes/paiementAutomatique.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import pointageRoutes from './routes/pointage.routes.js';
 import autorisationRoutes from './routes/autorisation.routes.js';
+import absenceRoutes from './routes/absence.routes.js';
+import calculSalaireRoutes from './routes/calculSalaire.routes.js';
 
 import { errorHandler, notFoundHandler, requestLogger, securityHeaders } from './middleware/errorHandler.js';
 
@@ -37,7 +38,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     // Liste des origines autorisées
-    const allowedOrigins = ['http://localhost:3001', 'http://localhost:3002'];
+    const allowedOrigins = ['http://localhost:3001', 'http://localhost:3002',  'https://f2da6b62-3ad6-45e3-99a2-54cab5c03dbc.lovableproject.com'];
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -58,15 +59,16 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/entreprises', entrepriseRoutes);
+app.use('/api/entreprises', paiementAutomatiqueRoutes);
 app.use('/api', employeRoutes); 
 app.use('/api', cyclePaieRoutes);
 app.use('/api', bulletinPaieRoutes); 
 app.use('/api', paiementRoutes);
-app.use('/api/paiements', paiementAutomatiseRoutes);
-app.use('/api/paiements-journaliers', paiementJournalierRoutes);
 app.use('/api', dashboardRoutes); 
 app.use('/api', pointageRoutes);
-app.use('/api', autorisationRoutes); 
+app.use('/api', autorisationRoutes);
+app.use('/api', absenceRoutes);
+app.use('/api', calculSalaireRoutes); 
 
 // Route de test
 app.get('/', (req, res) => {

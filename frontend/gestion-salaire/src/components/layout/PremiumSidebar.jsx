@@ -114,8 +114,6 @@ const PremiumSidebar = ({ isCollapsed = false, onToggle }) => {
         submenu: [
           { label: 'Cycles de paie', path: '/cycles', icon: Calendar },
           { label: 'Bulletins', path: '/bulletins', icon: FileText },
-          { label: 'Paiements Auto', path: '/paiements/automatises', icon: Wallet },
-          { label: 'Paiements Journaliers', path: '/paiements/journaliers', icon: UserCheck },
           { label: 'Paiements', path: '/paiements', icon: Wallet }
         ]
       },
@@ -138,9 +136,7 @@ const PremiumSidebar = ({ isCollapsed = false, onToggle }) => {
         label: 'Paiements',
         icon: DollarSign,
         submenu: [
-          { label: 'Paiements Auto', path: '/paiements/automatises', icon: Wallet },
-          { label: 'Paiements Journaliers', path: '/paiements/journaliers', icon: UserCheck },
-          { label: 'Autres Paiements', path: '/caissier/paiements', icon: DollarSign }
+          { label: 'Paiements', path: '/caissier/paiements', icon: DollarSign }
         ]
       },
       {

@@ -37,7 +37,6 @@
     employes        Employe[]
     cyclesPaie      CyclePaie[]
     pointages       Pointage[]
-    paiementsAutomatises PaiementAutomatise[]
 
     @@map("entreprises")
   }
@@ -59,8 +58,6 @@
     entreprise      Entreprise? @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
     paiements       Paiement[]
     pointagesValides Pointage[] // Pointages validés par cet admin
-    paiementsCalcules PaiementAutomatise[] @relation("PaiementCalculePar")
-    paiementsPayes    PaiementAutomatise[] @relation("PaiementPayePar")
 
     @@map("utilisateurs")
   }
@@ -80,6 +77,7 @@
     typeContrat     TypeContrat
     salaireBase     Float?   // Salaire de base (pour fixes et honoraires)
     tauxJournalier  Float?   // Taux journalier (pour journaliers)
+    tauxHoraire     Float?   // Taux horaire (pour horaires)
     compteBancaire  String?  // Coordonnées bancaires
     estActif        Boolean  @default(true) // Actif/Inactif (vacataires)
     dateEmbauche    DateTime
@@ -91,7 +89,6 @@
     entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
     bulletinsPaie   BulletinPaie[]
     pointages       Pointage[]
-    paiementsAutomatises PaiementAutomatise[]
 
     @@unique([entrepriseId, codeEmploye])
     @@map("employes")
@@ -130,16 +127,31 @@
   // ================================
 
   model BulletinPaie {
-    id              Int      @id @default(autoincrement())
-    numeroBulletin  String   // Numéro unique du bulletin
-    joursTravailes  Int?     // Nombre de jours travaillés (pour journaliers)
-    salaireBrut     Float    // Salaire brut
-    deductions      Float    @default(0) // Déductions
-    salaireNet      Float    // Salaire net à payer
-    montantPaye     Float    @default(0) // Montant payé
-    statut          StatutBulletinPaie @default(EN_ATTENTE)
-    creeLe          DateTime @default(now())
-    misAJourLe      DateTime @updatedAt
+    id               Int      @id @default(autoincrement())
+    numeroBulletin   String   // Numéro unique du bulletin
+    
+    // Champs pour journaliers
+    joursTravailes   Int?     // Nombre de jours travaillés (pour journaliers)
+    tauxJournalier   Float?   // Taux journalier utilisé (pour journaliers)
+    
+    // Champs pour honoraires
+    totalHeuresTravaillees Float? // Total heures travaillées (pour honoraires)
+    tauxHoraire      Float?   // Taux horaire utilisé (pour honoraires)
+    
+    // Champs communs
+    salaireBrut      Float    // Salaire brut
+    deductions       Float    @default(0) // Déductions totales
+    salaireNet       Float    // Salaire net à payer
+    montantPaye      Float    @default(0) // Montant payé
+    
+    // Champs pour absences (mensuels principalement)
+    nombreAbsences   Int?     @default(0) // Nombre d'absences du mois
+    joursAbsences    String?  // JSON des dates d'absences ["2025-10-01", "2025-10-05"]
+    montantDeduction Float?   @default(0) // Montant total des déductions d'absences
+    
+    statut           StatutBulletinPaie @default(EN_ATTENTE)
+    creeLe           DateTime @default(now())
+    misAJourLe       DateTime @updatedAt
 
     // Relations
     employeId       Int
@@ -172,38 +184,6 @@
     traitePar       Utilisateur @relation(fields: [traiteParId], references: [id])
 
     @@map("paiements")
-  }
-
-  // ================================
-  // PAIEMENTS AUTOMATISÉS BASÉS SUR POINTAGES
-  // ================================
-
-  model PaiementAutomatise {
-    id              Int      @id @default(autoincrement())
-    periode         String   // Ex: "2024-10" pour octobre 2024
-    montantDu       Float    // Montant calculé basé sur les pointages
-    montantPaye     Float    @default(0) // Montant déjà payé
-    typeContrat     TypeContrat // JOURNALIER, FIXE, HONORAIRE
-    detailsCalcul   Json     // Détails du calcul (jours travaillés, heures, absences, etc.)
-    statut          StatutPaiementAutomatise @default(CALCULE)
-    methodePaiement MethodePaiement?
-    dateCalcul      DateTime @default(now())
-    datePaiement    DateTime?
-    notes           String?
-    calculeParId    Int?     // ID du caissier qui a calculé
-    payeParId       Int?     // ID du caissier qui a payé
-
-    // Relations
-    employeId       Int
-    employe         Employe @relation(fields: [employeId], references: [id], onDelete: Cascade)
-    entrepriseId    Int
-    entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
-    calculePar      Utilisateur? @relation("PaiementCalculePar", fields: [calculeParId], references: [id])
-    payePar         Utilisateur? @relation("PaiementPayePar", fields: [payeParId], references: [id])
-
-    @@unique([employeId, periode])
-    @@index([entrepriseId, periode])
-    @@map("paiements_automatises")
   }
 
   // ================================
@@ -250,6 +230,7 @@
     JOURNALIER   // Journalier
     FIXE         // Salaire fixe
     HONORAIRE    // Honoraire
+    HORAIRE      // Horaire
   }
 
   enum PeriodePaie {
@@ -287,9 +268,4 @@
     TELETRAVAIL
   }
 
-  enum StatutPaiementAutomatise {
-    CALCULE     // Montant calculé mais pas encore payé
-    PARTIEL     // Payé partiellement
-    PAYE        // Payé intégralement
-    ANNULE      // Annulé
-  }
+

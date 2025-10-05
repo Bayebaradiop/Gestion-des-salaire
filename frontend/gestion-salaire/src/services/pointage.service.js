@@ -35,6 +35,21 @@ class PointageService {
   }
 
   /**
+   * Calculer les absences d'un employé pour une période
+   * @param {number} entrepriseId
+   * @param {number} employeId
+   * @param {string} du - Date de début (YYYY-MM-DD)
+   * @param {string} au - Date de fin (YYYY-MM-DD)
+   * @returns {Promise<{ nombreAbsences: number, joursAbsents: string[] }>}
+   */
+  async calculerAbsences(entrepriseId, employeId, du, au) {
+    const response = await authService.axios.get(
+      `/entreprises/${entrepriseId}/pointages/absences?employeId=${employeId}&du=${du}&au=${au}`
+    );
+    return response.data;
+  }
+
+  /**
    * Enregistrer une arrivée (clock-in)
    * @param {Object} payload { entrepriseId, employeId, notes?, date? }
    * - date: ISO string ou YYYY-MM-DD (optionnel, défaut: maintenant côté backend)

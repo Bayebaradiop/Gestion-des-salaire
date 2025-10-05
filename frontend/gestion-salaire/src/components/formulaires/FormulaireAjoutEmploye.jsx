@@ -24,6 +24,7 @@ const EmployeModal = ({
     typeContrat: 'FIXE',
     salaireBase: '',
     tauxJournalier: '',
+    tauxHoraire: '',
     dateEmbauche: '',
     compteBancaire: ''
   });
@@ -49,6 +50,7 @@ const EmployeModal = ({
         typeContrat: employe.typeContrat || 'FIXE',
         salaireBase: employe.salaireBase || '',
         tauxJournalier: employe.tauxJournalier || '',
+        tauxHoraire: employe.tauxHoraire || '',
         dateEmbauche: employe.dateEmbauche ? new Date(employe.dateEmbauche).toISOString().split('T')[0] : '',
         compteBancaire: employe.compteBancaire || ''
       });
@@ -63,6 +65,7 @@ const EmployeModal = ({
         typeContrat: 'FIXE',
         salaireBase: '',
         tauxJournalier: '',
+        tauxHoraire: '',
         dateEmbauche: '',
         compteBancaire: ''
       });
@@ -105,13 +108,17 @@ const EmployeModal = ({
     if (!formData.poste.trim()) newErrors.poste = 'Le poste est requis';
 
     // Validation selon le type de contrat
-    if ((formData.typeContrat === 'FIXE' || formData.typeContrat === 'HONORAIRE') && 
+    if (formData.typeContrat === 'FIXE' && 
         (!formData.salaireBase || Number(formData.salaireBase) <= 0)) {
       newErrors.salaireBase = 'Salaire de base requis';
     }
     if (formData.typeContrat === 'JOURNALIER' &&
         (!formData.tauxJournalier || Number(formData.tauxJournalier) <= 0)) {
       newErrors.tauxJournalier = 'Taux journalier requis';
+    }
+    if (formData.typeContrat === 'HONORAIRE' &&
+        (!formData.tauxHoraire || Number(formData.tauxHoraire) <= 0)) {
+      newErrors.tauxHoraire = 'Taux horaire requis';
     }
 
     if (!formData.dateEmbauche.trim()) newErrors.dateEmbauche = 'Date requise';
@@ -290,29 +297,29 @@ const EmployeModal = ({
           >
             <option value="FIXE">💼 Contrat fixe: Salaire mensuel régulier</option>
             <option value="JOURNALIER">📅 Journalier: Paiement par jour travaillé</option>
-            <option value="HONORAIRE">🎯 Honoraire: Paiement par mission</option>
+            <option value="HONORAIRE">⏰ Honoraire: Paiement à l'heure</option>
           </select>
           {renderError('typeContrat')}
         </div>
 
-        {/* Salaire de base (si fixe ou honoraire) */}
-        {(formData.typeContrat === 'FIXE' || formData.typeContrat === 'HONORAIRE') && (
+        {/* Salaire de base (si fixe) */}
+        {formData.typeContrat === 'FIXE' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              {formData.typeContrat === 'FIXE' ? 'Salaire de Base (XOF) *' : 'Honoraire par Mission (XOF) *'}
+              Salaire de Base (XOF) *
             </label>
             <input
               type="number"
               name="salaireBase"
               value={formData.salaireBase}
               onChange={handleChange}
-              placeholder={formData.typeContrat === 'FIXE' ? "Ex: 150000" : "Ex: 50000"}
+              placeholder="Ex: 150000"
               min="1"
               step="1"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.salaireBase ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
             />
             <p className="mt-1 text-xs text-gray-500">
-              {formData.typeContrat === 'FIXE' ? 'Salaire mensuel fixe' : 'Montant par mission/projet'}
+              Salaire mensuel fixe
             </p>
             {renderError('salaireBase')}
           </div>
@@ -336,6 +343,27 @@ const EmployeModal = ({
             />
             <p className="mt-1 text-xs text-gray-500">Montant par jour travaillé</p>
             {renderError('tauxJournalier')}
+          </div>
+        )}
+
+        {/* Taux horaire (si honoraire) */}
+        {formData.typeContrat === 'HONORAIRE' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Taux Horaire (XOF) *
+            </label>
+            <input
+              type="number"
+              name="tauxHoraire"
+              value={formData.tauxHoraire}
+              onChange={handleChange}
+              placeholder="Ex: 15000"
+              min="1"
+              step="1"
+              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${errors.tauxHoraire ? 'border-red-300 bg-red-50' : 'border-gray-300'}`}
+            />
+            <p className="mt-1 text-xs text-gray-500">Montant par heure travaillée</p>
+            {renderError('tauxHoraire')}
           </div>
         )}
 

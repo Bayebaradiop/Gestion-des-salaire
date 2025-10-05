@@ -91,4 +91,113 @@ export class PointageController {
       next(error);
     }
   }
+
+  async calculerAbsences(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { entrepriseId } = req.params;
+      const { employeId, du, au } = req.query;
+
+      if (!employeId || !du || !au) {
+        return res.status(400).json({ 
+          message: 'Paramètres employeId, du et au requis' 
+        });
+      }
+
+      const result = await this.service.calculerAbsences(
+        Number(entrepriseId),
+        Number(employeId),
+        du as string,
+        au as string
+      );
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Met à jour un pointage avec recalcul automatique de la durée
+   */
+  async mettreAJour(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const { heureArrivee, heureDepart, statut, notes, dureeMinutes } = req.body;
+
+      const result = await this.service.mettreAJourPointage(Number(id), {
+        heureArrivee: heureArrivee ? new Date(heureArrivee) : undefined,
+        heureDepart: heureDepart ? new Date(heureDepart) : undefined,
+        statut: statut as StatutPointage,
+        notes,
+        dureeMinutes: dureeMinutes !== undefined ? Number(dureeMinutes) : undefined
+      });
+
+      res.json({
+        message: 'Pointage mis à jour avec succès',
+        pointage: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Recalcule la durée d'un pointage spécifique
+   */
+  async recalculerDuree(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      const result = await this.service.recalculerDuree(Number(id));
+
+      res.json({
+        message: 'Durée recalculée avec succès',
+        pointage: result
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Recalcule toutes les durées manquantes pour une entreprise
+   */
+  async recalculerToutesLesDurees(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { entrepriseId } = req.params;
+      const nombreMisAJour = await this.service.recalculerToutesLesDurees(Number(entrepriseId));
+
+      res.json({
+        message: `${nombreMisAJour} pointages mis à jour avec succès`,
+        nombreMisAJour
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Obtient les statistiques de pointage pour un employé
+   */
+  async obtenirStatistiques(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { employeId } = req.params;
+      const { dateDebut, dateFin } = req.query;
+
+      if (!dateDebut || !dateFin) {
+        return res.status(400).json({
+          message: 'Paramètres dateDebut et dateFin requis'
+        });
+      }
+
+      const result = await this.service.obtenirStatistiquesPointage(
+        Number(employeId),
+        new Date(dateDebut as string),
+        new Date(dateFin as string)
+      );
+
+      res.json(result);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

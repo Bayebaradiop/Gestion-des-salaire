@@ -188,4 +188,29 @@ export class BulletinPaieController {
       next(error);
     }
   };
+
+  public obtenirAvecAbsences = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const bulletinId = parseInt(req.params.id);
+      const bulletin = await this.service.obtenirBulletinAvecAbsences(bulletinId);
+      
+      if (!bulletin) {
+        res.status(404).json({ message: 'Bulletin non trouvé' });
+        return;
+      }
+
+      // Vérifier les permissions
+      if (req.utilisateur && req.utilisateur.role !== 'SUPER_ADMIN') {
+        const cycle = await this.cycleRepo.trouverParId(bulletin.cyclePaieId);
+        if (!cycle || req.utilisateur.entrepriseId !== cycle.entrepriseId) {
+          res.status(403).json({ message: 'Accès refusé - Entreprise non autorisée' });
+          return;
+        }
+      }
+
+      res.json(bulletin);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

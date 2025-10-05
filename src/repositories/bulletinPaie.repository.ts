@@ -160,4 +160,160 @@ export class BulletinPaieRepository extends BaseRepository {
       }
     });
   }
+
+  async trouverParCycleEtEmploye(cyclePaieId: number, employeId: number): Promise<BulletinPaie | null> {
+    return await this.prisma.bulletinPaie.findUnique({
+      where: {
+        cyclePaieId_employeId: {
+          cyclePaieId,
+          employeId
+        }
+      },
+      include: {
+        employe: true,
+        cyclePaie: true,
+        paiements: true
+      }
+    });
+  }
+
+  async mettreAJour(id: number, donnees: ModifierBulletinPaieData): Promise<BulletinPaie> {
+    return this.modifier(id, donnees);
+  }
+
+  async obtenirParId(id: number) {
+    return await this.prisma.bulletinPaie.findUnique({
+      where: { id },
+      include: {
+        employe: true,
+        cyclePaie: true,
+        paiements: true
+      }
+    });
+  }
+
+  async obtenirCyclePaie(cyclePaieId: number) {
+    return await this.prisma.cyclePaie.findUnique({
+      where: { id: cyclePaieId },
+      include: {
+        entreprise: true
+      }
+    });
+  }
+
+  async listerParCycleEtTypeContrat(cyclePaieId: number, typeContrat: string) {
+    return await this.prisma.bulletinPaie.findMany({
+      where: {
+        cyclePaieId,
+        employe: {
+          typeContrat: typeContrat as any
+        }
+      },
+      include: {
+        employe: true,
+        cyclePaie: true
+      }
+    });
+  }
+
+  async mettreAJourAbsences(
+    id: number, 
+    donnees: {
+      nombreAbsences: number;
+      joursAbsences: string;
+      montantDeduction: number;
+      salaireNet: number;
+    }
+  ) {
+    return await this.prisma.bulletinPaie.update({
+      where: { id },
+      data: {
+        nombreAbsences: donnees.nombreAbsences,
+        joursAbsences: donnees.joursAbsences,
+        montantDeduction: donnees.montantDeduction,
+        salaireNet: donnees.salaireNet,
+        misAJourLe: new Date()
+      } as any,
+      include: {
+        employe: true,
+        cyclePaie: true
+      }
+    });
+  }
+
+  async mettreAJourJournalier(
+    id: number, 
+    donnees: {
+      joursTravailes: number;
+      tauxJournalier: number;
+      salaireBrut: number;
+      salaireNet: number;
+      joursAbsences: string;
+    }
+  ) {
+    console.log('💾 Mise à jour du bulletin journalier en base:', { id, donnees });
+    
+    const bulletin = await this.prisma.bulletinPaie.update({
+      where: { id },
+      data: {
+        joursTravailes: Math.max(0, donnees.joursTravailes), // S'assurer que c'est >= 0
+        tauxJournalier: Math.max(0, donnees.tauxJournalier), // Stocker le taux utilisé
+        salaireBrut: Math.max(0, donnees.salaireBrut), // S'assurer que c'est >= 0
+        salaireNet: Math.max(0, donnees.salaireNet), // S'assurer que c'est >= 0
+        deductions: 0, // Pas de déductions pour les journaliers par défaut
+        joursAbsences: donnees.joursAbsences,
+        misAJourLe: new Date()
+      } as any,
+      include: {
+        employe: true,
+        cyclePaie: true
+      }
+    });
+
+    console.log('✅ Bulletin journalier mis à jour:', {
+      id: bulletin.id,
+      joursTravailes: bulletin.joursTravailes,
+      salaireBrut: bulletin.salaireBrut,
+      salaireNet: bulletin.salaireNet
+    });
+
+    return bulletin;
+  }
+
+  async mettreAJourHonoraire(
+    id: number, 
+    donnees: {
+      salaireBrut: number;
+      salaireNet: number;
+      totalHeuresTravaillees: number;
+      tauxHoraire: number;
+    }
+  ) {
+    console.log('💾 Mise à jour du bulletin honoraire en base:', { id, donnees });
+    
+    const bulletin = await this.prisma.bulletinPaie.update({
+      where: { id },
+      data: {
+        salaireBrut: Math.max(0, donnees.salaireBrut), // S'assurer que c'est >= 0
+        salaireNet: Math.max(0, donnees.salaireNet), // S'assurer que c'est >= 0
+        totalHeuresTravaillees: Math.max(0, donnees.totalHeuresTravaillees),
+        tauxHoraire: Math.max(0, donnees.tauxHoraire),
+        deductions: 0, // Pas de déductions pour les honoraires par défaut
+        joursTravailes: null, // Pas de jours travaillés pour les honoraires
+        misAJourLe: new Date()
+      } as any,
+      include: {
+        employe: true,
+        cyclePaie: true
+      }
+    });
+
+    console.log('✅ Bulletin honoraire mis à jour:', {
+      id: bulletin.id,
+      salaireBrut: bulletin.salaireBrut,
+      salaireNet: bulletin.salaireNet
+    });
+
+    return bulletin;
+  }
 }

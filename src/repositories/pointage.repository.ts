@@ -148,7 +148,156 @@ export class PointageRepository extends BaseRepository {
     });
   }
 
+  async listerParEmployeEtPeriode(employeId: number, du: Date, au: Date) {
+    return this.prisma.pointage.findMany({
+      where: {
+        employeId,
+        date: {
+          gte: du,
+          lte: au
+        }
+      },
+      orderBy: {
+        date: 'asc'
+      },
+      include: {
+        employe: true
+      }
+    });
+  }
+
+  async listerAbsencesParPeriode(employeId: number, du: Date, au: Date) {
+    return this.prisma.pointage.findMany({
+      where: {
+        employeId,
+        statut: 'ABSENT',
+        date: {
+          gte: du,
+          lte: au
+        }
+      },
+      orderBy: {
+        date: 'asc'
+      }
+    });
+  }
+
+  async listerPresencesParPeriode(employeId: number, du: Date, au: Date) {
+    return this.prisma.pointage.findMany({
+      where: {
+        employeId,
+        statut: 'PRESENT',
+        date: {
+          gte: du,
+          lte: au
+        }
+      },
+      orderBy: {
+        date: 'asc'
+      }
+    });
+  }
+
   async supprimer(id: number) {
     await this.prisma.pointage.delete({ where: { id } });
+  }
+
+  /**
+   * Met à jour un pointage
+   * @param id ID du pointage
+   * @param data Données à mettre à jour
+   * @returns Pointage mis à jour
+   */
+  async mettreAJour(id: number, data: {
+    heureArrivee?: Date | null;
+    heureDepart?: Date | null;
+    dureeMinutes?: number | null;
+    statut?: StatutPointage;
+    notes?: string;
+  }) {
+    return this.prisma.pointage.update({
+      where: { id },
+      data: {
+        ...data,
+        misAJourLe: new Date(),
+      },
+      include: {
+        employe: true,
+        entreprise: true,
+      }
+    });
+  }
+
+  /**
+   * Trouve les pointages sans durée mais avec heures d'arrivée et départ
+   * @param entrepriseId ID de l'entreprise (optionnel)
+   * @returns Liste des pointages à recalculer
+   */
+  async trouverSansDuree(entrepriseId?: number) {
+    const where: any = {
+      AND: [
+        { dureeMinutes: null },
+        { heureArrivee: { not: null } },
+        { heureDepart: { not: null } },
+      ]
+    };
+
+    if (entrepriseId) {
+      where.entrepriseId = entrepriseId;
+    }
+
+    return this.prisma.pointage.findMany({
+      where,
+      select: {
+        id: true,
+        heureArrivee: true,
+        heureDepart: true,
+        employe: {
+          select: {
+            id: true,
+            prenom: true,
+            nom: true,
+            codeEmploye: true
+          }
+        }
+      }
+    });
+  }
+
+  /**
+   * Trouve les pointages avec des durées incohérentes (pour maintenance)
+   * @param entrepriseId ID de l'entreprise (optionnel)
+   * @returns Liste des pointages avec problèmes
+   */
+  async trouverDureesInconsistantes(entrepriseId?: number) {
+    const where: any = {
+      AND: [
+        { heureArrivee: { not: null } },
+        { heureDepart: { not: null } },
+        { dureeMinutes: { not: null } },
+      ]
+    };
+
+    if (entrepriseId) {
+      where.entrepriseId = entrepriseId;
+    }
+
+    return this.prisma.pointage.findMany({
+      where,
+      select: {
+        id: true,
+        heureArrivee: true,
+        heureDepart: true,
+        dureeMinutes: true,
+        employe: {
+          select: {
+            id: true,
+            prenom: true,
+            nom: true,
+            codeEmploye: true
+          }
+        }
+      }
+    });
   }
 }

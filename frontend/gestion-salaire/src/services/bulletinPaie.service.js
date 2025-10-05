@@ -50,6 +50,12 @@ class BulletinPaieService {
     return response.data;
   }
 
+  // Obtenir un bulletin par ID avec toutes ses informations
+  async obtenirParId(bulletinId) {
+    const response = await authService.axios.get(`/bulletins/${bulletinId}`);
+    return response.data;
+  }
+
   // Télécharger PDF avec gestion des erreurs
   async telechargerPDF(bulletinId) {
     try {

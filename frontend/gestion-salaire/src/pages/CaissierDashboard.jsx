@@ -174,6 +174,16 @@ const CaissierDashboard = () => {
           <FaPlus /> Nouveau Paiement
         </button>
         
+        {user?.role === 'ADMIN' && (
+          <button
+            onClick={() => window.location.href = '/paiement-automatique'}
+            className="bg-emerald-600 text-white px-4 py-2 rounded-md hover:bg-emerald-700 flex items-center gap-2"
+            title="Génération automatique basée sur les pointages"
+          >
+            <FaReceipt /> Paiement Automatique
+          </button>
+        )}
+        
         <button
           onClick={() => setShowFiltres(!showFiltres)}
           className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 flex items-center gap-2"

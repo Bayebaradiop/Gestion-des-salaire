@@ -25,9 +25,7 @@ import PointagesPage from './pages/pointages/PointagesPage';
 import EnregistrementPointage from './pages/pointages/EnregistrementPointage';
 import ListePointagesPage from './pages/pointages/ListePointagesPage';
 import GestionAutorisationsPage from './pages/admin/GestionAutorisationsPage';
-import PaiementsAutomatisesPage from './pages/paiements/PaiementsAutomatisesPage';
-import GestionPaiementsJournaliersPage from './pages/paiements/GestionPaiementsJournaliersPage';
-import PaiementsJournaliersPage from './pages/paiements/PaiementsJournaliersPage';
+import PaiementAutomatiquePage from './pages/paiements/PaiementAutomatiquePage';
 
 function App() {
   const { user, loading } = useAuth();
@@ -72,8 +70,7 @@ function App() {
             <Route path="/pointages/enregistrement" element={<EnregistrementPointage />} />
             <Route path="/pointages/liste" element={<ListePointagesPage />} />
             <Route path="/admin/autorisations" element={<GestionAutorisationsPage />} />
-            <Route path="/paiements/automatises" element={<PaiementsAutomatisesPage />} />
-            <Route path="/paiements/journaliers" element={<GestionPaiementsJournaliersPage />} />
+            <Route path="/paiements/automatique" element={<PaiementAutomatiquePage />} />
             <Route path="/" element={<Navigate to="/dashboard" />} />
             <Route path="/home" element={<Navigate to="/dashboard" />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />

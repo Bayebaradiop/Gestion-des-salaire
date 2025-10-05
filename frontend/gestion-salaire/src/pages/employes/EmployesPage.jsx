@@ -10,8 +10,7 @@ import Modal from '../../components/ui/Modal';
 import EmployeDetailsModal from '../../components/modals/EmployeDetailsModal';
 import FormulaireAjoutEmploye from '../../components/formulaires/FormulaireAjoutEmploye';
 import employeService from '../../services/employe.service';
-import ModalCalculerPaiement from '../../components/modals/ModalCalculerPaiement';
-import { FaPlus, FaFilter, FaCheck, FaTimes, FaEdit, FaEye, FaCalculator } from 'react-icons/fa';
+import { FaPlus, FaFilter, FaCheck, FaTimes, FaEdit, FaEye } from 'react-icons/fa';
 
 const EmployesPage = () => {
   const { user, isAdmin } = useAuth();
@@ -27,8 +26,6 @@ const EmployesPage = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedEmploye, setSelectedEmploye] = useState(null);
   const [showAjoutModal, setShowAjoutModal] = useState(false);
-  const [showCalculPaiementModal, setShowCalculPaiementModal] = useState(false);
-  const [employeCalculPaiement, setEmployeCalculPaiement] = useState(null);
   const [postes, setPostes] = useState([]);
   
   // Pour la pagination (à implémenter plus tard)
@@ -108,15 +105,7 @@ const EmployesPage = () => {
     setShowAjoutModal(false);
   };
 
-  const handleCalculerPaiement = (employe) => {
-    setEmployeCalculPaiement(employe);
-    setShowCalculPaiementModal(true);
-  };
 
-  const handlePaiementCalcule = (paiement) => {
-    toast.success(`Paiement calculé et enregistré pour ${employeCalculPaiement?.prenom} ${employeCalculPaiement?.nom}`);
-    // Optionnel: actualiser les données si nécessaire
-  };
 
   const columns = [
     {
@@ -200,16 +189,7 @@ const EmployesPage = () => {
             <FaEye />
           </Button>
           
-          {employe.estActif && (
-            <Button 
-              size="sm"
-              variant="primary"
-              onClick={() => handleCalculerPaiement(employe)}
-              title="Calculer le paiement"
-            >
-              <FaCalculator />
-            </Button>
-          )}
+
           
           {isAdmin && (
             <>
@@ -391,16 +371,7 @@ const EmployesPage = () => {
         entrepriseId={user?.entrepriseId}
       />
 
-      {/* Modal de calcul de paiement */}
-      <ModalCalculerPaiement
-        isOpen={showCalculPaiementModal}
-        onClose={() => {
-          setShowCalculPaiementModal(false);
-          setEmployeCalculPaiement(null);
-        }}
-        employe={employeCalculPaiement}
-        onPaiementCalcule={handlePaiementCalcule}
-      />
+
     </div>
   );
 };

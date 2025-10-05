@@ -176,6 +176,7 @@ export class EmployeService {
     typeContrat: string;
     salaireBase?: number | null | undefined;
     tauxJournalier?: number | null | undefined;
+    tauxHoraire?: number | null | undefined;
   }): void {
     switch (donnees.typeContrat) {
       case 'JOURNALIER':
@@ -184,9 +185,13 @@ export class EmployeService {
         }
         break;
       case 'FIXE':
-      case 'HONORAIRE':
         if (!donnees.salaireBase || donnees.salaireBase <= 0) {
-          throw new Error('Salaire de base requis et doit être positif pour ce type de contrat');
+          throw new Error('Salaire de base requis et doit être positif pour un contrat fixe');
+        }
+        break;
+      case 'HONORAIRE':
+        if (!donnees.tauxHoraire || donnees.tauxHoraire <= 0) {
+          throw new Error('Taux horaire requis et doit être positif pour un contrat honoraire');
         }
         break;
       default:

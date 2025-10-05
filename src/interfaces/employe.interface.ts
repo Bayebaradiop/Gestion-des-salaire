@@ -11,6 +11,7 @@ export interface CreerEmployeDto {
   typeContrat: TypeContrat;
   salaireBase?: number;
   tauxJournalier?: number;
+  tauxHoraire?: number;
   compteBancaire?: string;
   dateEmbauche: string; // Format ISO
 }
@@ -24,6 +25,7 @@ export interface ModifierEmployeDto {
   typeContrat?: TypeContrat;
   salaireBase?: number;
   tauxJournalier?: number;
+  tauxHoraire?: number;
   compteBancaire?: string;
   dateEmbauche?: string; // Format ISO - optionnel pour modification
   estActif?: boolean;

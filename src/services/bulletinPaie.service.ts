@@ -1,6 +1,7 @@
 import { BulletinPaieRepository } from '../repositories/bulletinPaie.repository.js';
 import { EmployeRepository } from '../repositories/employe.repository.js';
 import { CyclePaieRepository } from '../repositories/cyclePaie.repository.js';
+import { AbsenceService } from './absence.service.js';
 import type { CreerBulletinPaieData, ModifierBulletinPaieData } from '../repositories/bulletinPaie.repository.js';
 import type { BulletinPaie } from '@prisma/client';
 
@@ -8,11 +9,13 @@ export class BulletinPaieService {
   private bulletinPaieRepository: BulletinPaieRepository;
   private employeRepository: EmployeRepository;
   private cyclePaieRepository: CyclePaieRepository;
+  private absenceService: AbsenceService;
 
   constructor() {
     this.bulletinPaieRepository = new BulletinPaieRepository();
     this.employeRepository = new EmployeRepository();
     this.cyclePaieRepository = new CyclePaieRepository();
+    this.absenceService = new AbsenceService();
   }
 
   async listerParCycle(cyclePaieId: number): Promise<BulletinPaie[]> {
@@ -158,5 +161,54 @@ export class BulletinPaieService {
     if (joursTravailes > 25 && joursMaxDansPeriode <= 31) {
       console.warn(`⚠️ Attention: ${joursTravailes} jours travaillés semble élevé pour une période de ${joursMaxDansPeriode} jours`);
     }
+  }
+
+  /**
+   * Créer un bulletin de paie avec calcul automatique des absences pour les employés fixes
+   */
+  async creerBulletinAvecAbsences(bulletinData: CreerBulletinPaieData) {
+    // Créer le bulletin initial
+    const bulletin = await this.bulletinPaieRepository.creer(bulletinData);
+
+    // Vérifier si c'est un employé fixe pour calculer les absences
+    const bulletinComplet = await this.bulletinPaieRepository.obtenirParId(bulletin.id);
+    if (bulletinComplet?.employe.typeContrat === 'FIXE') {
+      // Calculer automatiquement les absences
+      await this.absenceService.mettreAJourBulletinAvecAbsences(bulletin.id);
+      
+      // Retourner le bulletin mis à jour
+      return await this.bulletinPaieRepository.obtenirParId(bulletin.id);
+    }
+
+    return bulletinComplet;
+  }
+
+  /**
+   * Recalculer tous les bulletins d'un cycle avec les absences
+   */
+  async recalculerCycleAvecAbsences(cyclePaieId: number) {
+    return await this.absenceService.mettreAJourCycleAvecAbsences(cyclePaieId);
+  }
+
+  /**
+   * Obtenir un bulletin avec ses informations d'absences formatées
+   */
+  async obtenirBulletinAvecAbsences(bulletinId: number) {
+    const bulletin = await this.bulletinPaieRepository.obtenirParId(bulletinId);
+    if (!bulletin) {
+      throw new Error('Bulletin introuvable');
+    }
+
+    // Ajouter les informations d'absences formatées
+    const bulletinAvecAbsences = {
+      ...bulletin,
+      absences: {
+        nombre: (bulletin as any).nombreAbsences || 0,
+        jours: (bulletin as any).joursAbsences ? JSON.parse((bulletin as any).joursAbsences) : [],
+        montantDeduction: (bulletin as any).montantDeduction || 0
+      }
+    };
+
+    return bulletinAvecAbsences;
   }
 }
