@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { PointageService } from '../services/pointage.service.js';
 import { PDFService } from '../services/pdf.service.js';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, StatutPointage } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -39,7 +39,7 @@ export class PointageController {
         entrepriseId: Number(entrepriseId),
         employeId: Number(employeId),
         date,
-        statut: statut || 'ABSENT',
+        statut: (statut as StatutPointage) || ('ABSENT' as StatutPointage),
         notes,
         marqueAutomatiquement: marqueAutomatiquement || false
       });

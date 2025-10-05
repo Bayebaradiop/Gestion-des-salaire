@@ -1,246 +1,295 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+  // This is your Prisma schema file,
+  // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+  // Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+  // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
-generator client {
-  provider = "prisma-client-js"
-}
+  generator client {
+    provider = "prisma-client-js"
+  }
 
-datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
-}
+  datasource db {
+    provider = "mysql"
+    url      = env("DATABASE_URL")
+  }
 
-// ================================
-// GESTION DES ENTREPRISES & UTILISATEURS
-// ================================
+  // ================================
+  // GESTION DES ENTREPRISES & UTILISATEURS
+  // ================================
 
-model Entreprise {
-   id              Int      @id @default(autoincrement())
-   nom             String
-   logo            String? @db.Text
-   couleur         String   @default("#3B82F6") // Couleur de l'entreprise (hex)
-   adresse         String?
-   telephone       String?
-   email           String?
-   devise          String   @default("XOF") // Devise par défaut
-   periodePaie     PeriodePaie @default(MENSUELLE) // Période de paie
-   estActif        Boolean  @default(true) // Statut actif/inactif
-   creeLe          DateTime @default(now())
-   misAJourLe      DateTime @updatedAt
-
-   // Relations
-   utilisateurs    Utilisateur[]
-   employes        Employe[]
-   cyclesPaie      CyclePaie[]
-   pointages       Pointage[]
-
-   @@map("entreprises")
-}
-
-model Utilisateur {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
-  motDePasse      String
-  prenom          String
-  nom             String
-  role            RoleUtilisateur
-  estActif        Boolean  @default(true)
-  derniereConnexion DateTime?
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
-
-  // Relations
-  entrepriseId    Int?
-  entreprise      Entreprise? @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
-  paiements       Paiement[]
-
-  @@map("utilisateurs")
-}
-
-// ================================
-// GESTION DES EMPLOYÉS
-// ================================
-
-model Employe {
-  id              Int      @id @default(autoincrement())
-  codeEmploye     String   // Code unique employé dans l'entreprise
-  prenom          String
-  nom             String
-  email           String?
-  telephone       String?
-  poste           String   // Poste occupé
-  typeContrat     TypeContrat
-  salaireBase     Float?   // Salaire de base (pour fixes et honoraires)
-  tauxJournalier  Float?   // Taux journalier (pour journaliers)
-  compteBancaire  String?  // Coordonnées bancaires
-  estActif        Boolean  @default(true) // Actif/Inactif (vacataires)
-  dateEmbauche    DateTime
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
-
-  // Relations
-  entrepriseId    Int
-  entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
-  bulletinsPaie   BulletinPaie[]
-  pointages       Pointage[]
-
-  @@unique([entrepriseId, codeEmploye])
-  @@map("employes")
-}
-
-// ================================
-// GESTION DES CYCLES DE PAIE
-// ================================
-
-model CyclePaie {
-  id              Int      @id @default(autoincrement())
-  titre           String   // Ex: "Paie Janvier 2024"
-  periode         String   // Ex: "2024-01" pour janvier 2024
-  dateDebut       DateTime
-  dateFin         DateTime
-  statut          StatutCyclePaie @default(BROUILLON)
-  totalBrut       Float    @default(0) // Total brut
-  totalNet        Float    @default(0) // Total net
-  totalPaye       Float    @default(0) // Total payé
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
-  approuveLe      DateTime?
-  clotureLe       DateTime?
-
-  // Relations
-  entrepriseId    Int
-  entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
-  bulletinsPaie   BulletinPaie[]
-
-  @@unique([entrepriseId, periode])
-  @@map("cycles_paie")
-}
-
-// ================================
-// BULLETINS DE PAIE
-// ================================
-
-model BulletinPaie {
-  id              Int      @id @default(autoincrement())
-  numeroBulletin  String   // Numéro unique du bulletin
-  joursTravailes  Int?     // Nombre de jours travaillés (pour journaliers)
-  salaireBrut     Float    // Salaire brut
-  deductions      Float    @default(0) // Déductions
-  salaireNet      Float    // Salaire net à payer
-  montantPaye     Float    @default(0) // Montant payé
-  statut          StatutBulletinPaie @default(EN_ATTENTE)
-  creeLe          DateTime @default(now())
-  misAJourLe      DateTime @updatedAt
-
-  // Relations
-  employeId       Int
-  employe         Employe @relation(fields: [employeId], references: [id], onDelete: Cascade)
-  cyclePaieId     Int
-  cyclePaie       CyclePaie @relation(fields: [cyclePaieId], references: [id], onDelete: Cascade)
-  paiements       Paiement[]
-
-  @@unique([cyclePaieId, employeId])
-  @@map("bulletins_paie")
-}
-
-// ================================
-// GESTION DES PAIEMENTS
-// ================================
-
-model Paiement {
-  id              Int      @id @default(autoincrement())
-  montant         Float
-  methodePaiement MethodePaiement
-  reference       String?  // Référence du paiement
-  notes           String?
-  numeroRecu      String   @unique // Numéro du reçu généré
-  creeLe          DateTime @default(now())
+  model Entreprise {
+    id              Int      @id @default(autoincrement())
+    nom             String
+    logo            String? @db.Text
+    couleur         String   @default("#3B82F6") // Couleur de l'entreprise (hex)
+    adresse         String?
+    telephone       String?
+    email           String?
+    devise          String   @default("XOF") // Devise par défaut
+    periodePaie     PeriodePaie @default(MENSUELLE) // Période de paie
+    estActif        Boolean  @default(true) // Statut actif/inactif
+    accesSuperAdminAutorise Boolean @default(true) // Autorisation d'accès pour les Super-Admins
+    creeLe          DateTime @default(now())
+    misAJourLe      DateTime @updatedAt
 
     // Relations
-  bulletinPaieId  Int
-  bulletinPaie    BulletinPaie @relation(fields: [bulletinPaieId], references: [id], onDelete: Cascade)
-  traiteParId     Int
-  traitePar       Utilisateur @relation(fields: [traiteParId], references: [id])
+    utilisateurs    Utilisateur[]
+    employes        Employe[]
+    cyclesPaie      CyclePaie[]
+    pointages       Pointage[]
+    paiementsAutomatises PaiementAutomatise[]
 
-  @@map("paiements")
-}
+    @@map("entreprises")
+  }
 
-// ================================
-// GESTION DES POINTAGES (PRÉSENCE/ABSENCE)
-// ================================
+  model Utilisateur {
+    id              Int      @id @default(autoincrement())
+    email           String   @unique
+    motDePasse      String
+    prenom          String
+    nom             String
+    role            RoleUtilisateur
+    estActif        Boolean  @default(true)
+    derniereConnexion DateTime?
+    creeLe          DateTime @default(now())
+    misAJourLe      DateTime @updatedAt
 
-model Pointage {
-  id             Int       @id @default(autoincrement())
-  date           DateTime  // Jour du pointage
-  heureArrivee   DateTime?
-  heureDepart    DateTime?
-  dureeMinutes   Int?
-  statut         StatutPointage @default(PRESENT) // Présent, absent, retard, etc.
-  notes          String?
-  creeLe         DateTime @default(now())
-  misAJourLe     DateTime @updatedAt
+    // Relations
+    entrepriseId    Int?
+    entreprise      Entreprise? @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
+    paiements       Paiement[]
+    pointagesValides Pointage[] // Pointages validés par cet admin
+    paiementsCalcules PaiementAutomatise[] @relation("PaiementCalculePar")
+    paiementsPayes    PaiementAutomatise[] @relation("PaiementPayePar")
 
-  // Relations
-  employeId      Int
-  employe        Employe    @relation(fields: [employeId], references: [id], onDelete: Cascade)
-  entrepriseId   Int
-  entreprise     Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
+    @@map("utilisateurs")
+  }
 
-  @@unique([employeId, date])
-  @@index([entrepriseId, date])
-  @@map("pointages")
-}
+  // ================================
+  // GESTION DES EMPLOYÉS
+  // ================================
 
-// ================================
-// ENUMS
-// ================================
+  model Employe {
+    id              Int      @id @default(autoincrement())
+    codeEmploye     String   // Code unique employé dans l'entreprise
+    prenom          String
+    nom             String
+    email           String?
+    telephone       String?
+    poste           String   // Poste occupé
+    typeContrat     TypeContrat
+    salaireBase     Float?   // Salaire de base (pour fixes et honoraires)
+    tauxJournalier  Float?   // Taux journalier (pour journaliers)
+    compteBancaire  String?  // Coordonnées bancaires
+    estActif        Boolean  @default(true) // Actif/Inactif (vacataires)
+    dateEmbauche    DateTime
+    creeLe          DateTime @default(now())
+    misAJourLe      DateTime @updatedAt
 
-enum RoleUtilisateur {
-  SUPER_ADMIN
-  ADMIN
-  CAISSIER
-}
+    // Relations
+    entrepriseId    Int
+    entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
+    bulletinsPaie   BulletinPaie[]
+    pointages       Pointage[]
+    paiementsAutomatises PaiementAutomatise[]
 
-enum TypeContrat {
-  JOURNALIER   // Journalier
-  FIXE         // Salaire fixe
-  HONORAIRE    // Honoraire
-}
+    @@unique([entrepriseId, codeEmploye])
+    @@map("employes")
+  }
 
-enum PeriodePaie {
-  JOURNALIERE  // Journalière
-  HEBDOMADAIRE // Hebdomadaire
-  MENSUELLE    // Mensuelle
-}
+  // ================================
+  // GESTION DES CYCLES DE PAIE
+  // ================================
 
-enum StatutCyclePaie {
-  BROUILLON    // Brouillon
-  APPROUVE     // Approuvé
-  CLOTURE      // Clôturé
-}
+  model CyclePaie {
+    id              Int      @id @default(autoincrement())
+    titre           String   // Ex: "Paie Janvier 2024"
+    periode         String   // Ex: "2024-01" pour janvier 2024
+    dateDebut       DateTime
+    dateFin         DateTime
+    statut          StatutCyclePaie @default(BROUILLON)
+    totalBrut       Float    @default(0) // Total brut
+    totalNet        Float    @default(0) // Total net
+    totalPaye       Float    @default(0) // Total payé
+    creeLe          DateTime @default(now())
+    misAJourLe      DateTime @updatedAt
+    approuveLe      DateTime?
+    clotureLe       DateTime?
 
-enum StatutBulletinPaie {
-  EN_ATTENTE   // En attente
-  PARTIEL      // Payé partiellement
-  PAYE         // Payé intégralement
-}
+    // Relations
+    entrepriseId    Int
+    entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
+    bulletinsPaie   BulletinPaie[]
 
-enum MethodePaiement {
-  ESPECES      // Espèces
-  VIREMENT_BANCAIRE // Virement bancaire
-  ORANGE_MONEY // Orange Money
-  WAVE         // Wave
-  AUTRE        // Autre
-}
+    @@unique([entrepriseId, periode])
+    @@map("cycles_paie")
+  }
 
-enum StatutPointage {
-  PRESENT
-  ABSENT
-  RETARD
-  CONGE
-  MALADIE
-  TELETRAVAIL
-}
+  // ================================
+  // BULLETINS DE PAIE
+  // ================================
+
+  model BulletinPaie {
+    id              Int      @id @default(autoincrement())
+    numeroBulletin  String   // Numéro unique du bulletin
+    joursTravailes  Int?     // Nombre de jours travaillés (pour journaliers)
+    salaireBrut     Float    // Salaire brut
+    deductions      Float    @default(0) // Déductions
+    salaireNet      Float    // Salaire net à payer
+    montantPaye     Float    @default(0) // Montant payé
+    statut          StatutBulletinPaie @default(EN_ATTENTE)
+    creeLe          DateTime @default(now())
+    misAJourLe      DateTime @updatedAt
+
+    // Relations
+    employeId       Int
+    employe         Employe @relation(fields: [employeId], references: [id], onDelete: Cascade)
+    cyclePaieId     Int
+    cyclePaie       CyclePaie @relation(fields: [cyclePaieId], references: [id], onDelete: Cascade)
+    paiements       Paiement[]
+
+    @@unique([cyclePaieId, employeId])
+    @@map("bulletins_paie")
+  }
+
+  // ================================
+  // GESTION DES PAIEMENTS
+  // ================================
+
+  model Paiement {
+    id              Int      @id @default(autoincrement())
+    montant         Float
+    methodePaiement MethodePaiement
+    reference       String?  // Référence du paiement
+    notes           String?
+    numeroRecu      String   @unique // Numéro du reçu généré
+    creeLe          DateTime @default(now())
+
+      // Relations
+    bulletinPaieId  Int
+    bulletinPaie    BulletinPaie @relation(fields: [bulletinPaieId], references: [id], onDelete: Cascade)
+    traiteParId     Int
+    traitePar       Utilisateur @relation(fields: [traiteParId], references: [id])
+
+    @@map("paiements")
+  }
+
+  // ================================
+  // PAIEMENTS AUTOMATISÉS BASÉS SUR POINTAGES
+  // ================================
+
+  model PaiementAutomatise {
+    id              Int      @id @default(autoincrement())
+    periode         String   // Ex: "2024-10" pour octobre 2024
+    montantDu       Float    // Montant calculé basé sur les pointages
+    montantPaye     Float    @default(0) // Montant déjà payé
+    typeContrat     TypeContrat // JOURNALIER, FIXE, HONORAIRE
+    detailsCalcul   Json     // Détails du calcul (jours travaillés, heures, absences, etc.)
+    statut          StatutPaiementAutomatise @default(CALCULE)
+    methodePaiement MethodePaiement?
+    dateCalcul      DateTime @default(now())
+    datePaiement    DateTime?
+    notes           String?
+    calculeParId    Int?     // ID du caissier qui a calculé
+    payeParId       Int?     // ID du caissier qui a payé
+
+    // Relations
+    employeId       Int
+    employe         Employe @relation(fields: [employeId], references: [id], onDelete: Cascade)
+    entrepriseId    Int
+    entreprise      Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
+    calculePar      Utilisateur? @relation("PaiementCalculePar", fields: [calculeParId], references: [id])
+    payePar         Utilisateur? @relation("PaiementPayePar", fields: [payeParId], references: [id])
+
+    @@unique([employeId, periode])
+    @@index([entrepriseId, periode])
+    @@map("paiements_automatises")
+  }
+
+  // ================================
+  // GESTION DES POINTAGES (PRÉSENCE/ABSENCE)
+  // ================================
+
+  model Pointage {
+    id             Int       @id @default(autoincrement())
+    date           DateTime  // Jour du pointage
+    heureArrivee   DateTime?
+    heureDepart    DateTime?
+    dureeMinutes   Int?
+    statut         StatutPointage @default(PRESENT) // Présent, absent, retard, etc.
+    notes          String?
+    estValide      Boolean   @default(false) // Validation par l'admin
+    valideParId    Int?      // ID de l'admin qui a validé
+    dateValidation DateTime? // Date de validation
+    creeLe         DateTime @default(now())
+    misAJourLe     DateTime @updatedAt
+
+    // Relations
+    employeId      Int
+    employe        Employe    @relation(fields: [employeId], references: [id], onDelete: Cascade)
+    entrepriseId   Int
+    entreprise     Entreprise @relation(fields: [entrepriseId], references: [id], onDelete: Cascade)
+    validePar      Utilisateur? @relation(fields: [valideParId], references: [id])
+
+    @@unique([employeId, date])
+    @@index([entrepriseId, date])
+    @@map("pointages")
+  }
+
+  // ================================
+  // ENUMS
+  // ================================
+
+  enum RoleUtilisateur {
+    SUPER_ADMIN
+    ADMIN
+    CAISSIER
+  }
+
+  enum TypeContrat {
+    JOURNALIER   // Journalier
+    FIXE         // Salaire fixe
+    HONORAIRE    // Honoraire
+  }
+
+  enum PeriodePaie {
+    JOURNALIERE  // Journalière
+    HEBDOMADAIRE // Hebdomadaire
+    MENSUELLE    // Mensuelle
+  }
+
+  enum StatutCyclePaie {
+    BROUILLON    // Brouillon
+    APPROUVE     // Approuvé
+    CLOTURE      // Clôturé
+  }
+
+  enum StatutBulletinPaie {
+    EN_ATTENTE   // En attente
+    PARTIEL      // Payé partiellement
+    PAYE         // Payé intégralement
+  }
+
+  enum MethodePaiement {
+    ESPECES      // Espèces
+    VIREMENT_BANCAIRE // Virement bancaire
+    ORANGE_MONEY // Orange Money
+    WAVE         // Wave
+    AUTRE        // Autre
+  }
+
+  enum StatutPointage {
+    PRESENT
+    ABSENT
+    RETARD
+    CONGE
+    MALADIE
+    TELETRAVAIL
+  }
+
+  enum StatutPaiementAutomatise {
+    CALCULE     // Montant calculé mais pas encore payé
+    PARTIEL     // Payé partiellement
+    PAYE        // Payé intégralement
+    ANNULE      // Annulé
+  }

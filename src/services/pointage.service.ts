@@ -1,4 +1,5 @@
 import { PointageRepository } from '../repositories/pointage.repository.js';
+import type { StatutPointage } from '@prisma/client';
 
 function normalizeDateToMidnight(date: Date): Date {
   const d = new Date(date);
@@ -63,7 +64,7 @@ export class PointageService {
     entrepriseId: number; 
     employeId: number; 
     date: string; 
-    statut?: string; 
+    statut?: StatutPointage; 
     notes?: string; 
     marqueAutomatiquement?: boolean 
   }) {
@@ -81,7 +82,7 @@ export class PointageService {
       entrepriseId: payload.entrepriseId,
       employeId: payload.employeId,
       date: dateNormalisee,
-      statut: payload.statut || 'ABSENT',
+      statut: payload.statut || ('ABSENT' as StatutPointage),
       notes: payload.notes,
       marqueAutomatiquement: payload.marqueAutomatiquement || false
     });

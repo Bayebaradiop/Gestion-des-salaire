@@ -49,6 +49,8 @@ export const AuthProvider = ({ children }) => {
         } else {
           // Autre erreur réseau ou serveur
           console.error("Erreur lors de la vérification de l'authentification:", error);
+          // Si le serveur backend n'est pas accessible, on continue avec les données locales
+          console.warn("Backend non accessible, utilisation des données locales uniquement");
         }
       } finally {
         // Dans tous les cas, on arrête le chargement

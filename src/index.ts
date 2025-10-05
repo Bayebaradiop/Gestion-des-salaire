@@ -12,8 +12,11 @@ import employeRoutes from './routes/employe.routes.js';
 import cyclePaieRoutes from './routes/cyclePaie.routes.js';
 import bulletinPaieRoutes from './routes/bulletinPaie.routes.js';
 import paiementRoutes from './routes/paiement.routes.js';
+import paiementAutomatiseRoutes from './routes/paiementAutomatise.routes.js';
+import paiementJournalierRoutes from './routes/paiementJournalier.routes.js';
 import dashboardRoutes from './routes/dashboard.routes.js';
 import pointageRoutes from './routes/pointage.routes.js';
+import autorisationRoutes from './routes/autorisation.routes.js';
 
 import { errorHandler, notFoundHandler, requestLogger, securityHeaders } from './middleware/errorHandler.js';
 
@@ -58,9 +61,12 @@ app.use('/api/entreprises', entrepriseRoutes);
 app.use('/api', employeRoutes); 
 app.use('/api', cyclePaieRoutes);
 app.use('/api', bulletinPaieRoutes); 
-app.use('/api', paiementRoutes); 
+app.use('/api', paiementRoutes);
+app.use('/api/paiements', paiementAutomatiseRoutes);
+app.use('/api/paiements-journaliers', paiementJournalierRoutes);
 app.use('/api', dashboardRoutes); 
-app.use('/api', pointageRoutes); 
+app.use('/api', pointageRoutes);
+app.use('/api', autorisationRoutes); 
 
 // Route de test
 app.get('/', (req, res) => {
@@ -112,6 +118,7 @@ app.listen(PORT, () => {
   console.log(`   - Entreprises: http://localhost:${PORT}/api/entreprises`);
   console.log(`   - Employés: http://localhost:${PORT}/api/employes`);
   console.log(`   - Cycles de paie: http://localhost:${PORT}/api/cycles-paie`);
+  console.log(`   - Paiements (CAISSIER only): http://localhost:${PORT}/api/paiements`);
 });
 
 // Gestion propre de l'arrêt

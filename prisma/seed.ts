@@ -10,7 +10,7 @@ async function main() {
   const entreprise = await prisma.entreprise.create({
     data: {
       nom: 'Entreprise Test SA',
-      logo: 'https://via.placeholder.com/150',
+      logo: null, // Pas de logo par défaut
       adresse: '123 Rue de Test, Dakar',
       telephone: '+221 77 123 45 67',
       email: 'contact@testsa.com',

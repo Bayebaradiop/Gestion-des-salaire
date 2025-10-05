@@ -11,7 +11,8 @@ import {
   FileText,
   TrendingUp,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  Shield
 } from 'lucide-react';
 
 const Sidebar = () => {
@@ -132,6 +133,17 @@ const Sidebar = () => {
                 
                 {(isAdmin || isCaissier) && (
                   <NavItem to="/pointages/enregistrement" icon={TrendingUp} label="Enregistrement" />
+                )}
+                
+                {isAdmin && (
+                  <>
+                    <div className="px-2 mt-6 mb-3">
+                      <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Administration
+                      </p>
+                    </div>
+                    <NavItem to="/admin/autorisations" icon={Shield} label="Autorisations" />
+                  </>
                 )}
               </motion.div>
             )}

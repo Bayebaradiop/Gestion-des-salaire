@@ -9,7 +9,11 @@ const HORAIRES_STANDARD = {
   heureMarquageAbsence: "12:00" 
 };
 
-
+/**
+ * Hook personnalisé pour gérer la logique des pointages
+ * @param {number} entrepriseId - ID de l'entreprise
+ * @returns {Object} Fonctions et états pour les pointages
+ */
 export function usePointage(entrepriseId) {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,7 +36,12 @@ export function usePointage(entrepriseId) {
     return Math.max(0, diffMinutes - HORAIRES_STANDARD.toleranceRetard);
   }, []);
 
-
+  /**
+   * Détermine le statut du pointage
+   * @param {string} heureArrivee - Format "HH:MM"
+   * @param {string} heureDepart - Format "HH:MM" 
+   * @returns {string} PRESENT, RETARD, ABSENT, HEURES_SUP
+   */
   const determinerStatut = useCallback((heureArrivee, heureDepart) => {
     const maintenant = new Date();
     const heureCourante = `${maintenant.getHours().toString().padStart(2, '0')}:${maintenant.getMinutes().toString().padStart(2, '0')}`;

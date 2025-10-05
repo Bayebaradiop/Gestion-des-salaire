@@ -22,7 +22,8 @@ import {
   Wallet,
   UserCheck,
   Clock,
-  Archive
+  Archive,
+  CheckCircle
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../context/AdvancedThemeContext';
@@ -98,12 +99,23 @@ const PremiumSidebar = ({ isCollapsed = false, onToggle }) => {
         ]
       },
       {
+        id: 'pointages',
+        label: 'Pointages',
+        icon: Clock,
+        submenu: [
+          { label: 'Enregistrement', path: '/pointages/enregistrement', icon: Clock },
+          { label: 'Liste/Validation', path: '/pointages/liste', icon: CheckCircle }
+        ]
+      },
+      {
         id: 'payroll',
         label: 'Gestion Paie',
         icon: DollarSign,
         submenu: [
           { label: 'Cycles de paie', path: '/cycles', icon: Calendar },
           { label: 'Bulletins', path: '/bulletins', icon: FileText },
+          { label: 'Paiements Auto', path: '/paiements/automatises', icon: Wallet },
+          { label: 'Paiements Journaliers', path: '/paiements/journaliers', icon: UserCheck },
           { label: 'Paiements', path: '/paiements', icon: Wallet }
         ]
       },
@@ -125,7 +137,11 @@ const PremiumSidebar = ({ isCollapsed = false, onToggle }) => {
         id: 'payments',
         label: 'Paiements',
         icon: DollarSign,
-        path: '/caissier/paiements'
+        submenu: [
+          { label: 'Paiements Auto', path: '/paiements/automatises', icon: Wallet },
+          { label: 'Paiements Journaliers', path: '/paiements/journaliers', icon: UserCheck },
+          { label: 'Autres Paiements', path: '/caissier/paiements', icon: DollarSign }
+        ]
       },
       {
         id: 'bulletins',

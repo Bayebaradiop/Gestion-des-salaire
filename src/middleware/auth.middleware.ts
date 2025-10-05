@@ -63,15 +63,16 @@ export const autoriserRoles = (...rolesAutorises: RoleUtilisateur[]) => {
   };
 };
 
-export const verifierEntreprise = (req: Request, res: Response, next: NextFunction): void => {
+export const verifierEntreprise = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   if (!req.utilisateur) {
     res.status(401).json({ message: 'Utilisateur non authentifié' });
     return;
   }
 
-  // Super admin peut accéder à toutes les entreprises
+  // Super admin doit vérifier les autorisations d'accès
   if (req.utilisateur.role === 'SUPER_ADMIN') {
-    next();
+    // Déléguer la vérification au middleware spécialisé
+    await verifierAccesSuperAdminAutorise(req, res, next);
     return;
   }
 
@@ -92,4 +93,50 @@ export const verifierEntreprise = (req: Request, res: Response, next: NextFuncti
   }
 
   next();
+};
+
+/**
+ * Middleware pour vérifier l'accès Super-Admin avec autorisation de l'entreprise
+ */
+export const verifierAccesSuperAdminAutorise = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!req.utilisateur) {
+    res.status(401).json({ message: 'Utilisateur non authentifié' });
+    return;
+  }
+
+  // Seuls les Super-Admins peuvent utiliser ce middleware
+  if (req.utilisateur.role !== 'SUPER_ADMIN') {
+    res.status(403).json({ message: 'Accès réservé aux Super-Admins' });
+    return;
+  }
+
+  const entrepriseId = req.params.entrepriseId || req.body.entrepriseId;
+  
+  if (!entrepriseId) {
+    res.status(400).json({ message: 'ID entreprise manquant' });
+    return;
+  }
+
+  try {
+    // Import dynamique pour éviter les dépendances circulaires
+    const { AutorisationService } = await import('../services/autorisation.service.js');
+    const autorisationService = new AutorisationService();
+    
+    const accesAutorise = await autorisationService.verifierAccesAutorise(parseInt(entrepriseId));
+    
+    if (!accesAutorise) {
+      res.status(403).json({ 
+        message: 'Accès bloqué par l\'administrateur de l\'entreprise',
+        entrepriseId: parseInt(entrepriseId)
+      });
+      return;
+    }
+
+    next();
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Erreur lors de la vérification des autorisations',
+      error: error instanceof Error ? error.message : 'Erreur inconnue'
+    });
+  }
 };

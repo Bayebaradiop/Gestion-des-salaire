@@ -195,11 +195,11 @@ const SuperAdminEntrepriseDetailsPage = () => {
           animate={{ opacity: 1, y: 0 }}
           className="text-center"
         >
-          <div className="inline-flex p-6 bg-gray-100 dark:bg-gray-800 rounded-3xl mb-6">
-            <Building2 className="w-20 h-20 text-gray-400" />
+          <div className="inline-flex p-6 bg-red-100 dark:bg-red-900/20 rounded-3xl mb-6">
+            <Building2 className="w-20 h-20 text-red-400" />
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white mb-3">Entreprise Non Trouvée</h2>
-          <p className="text-lg font-semibold text-gray-600 dark:text-gray-400 mb-6">Cette entreprise n'existe pas ou a été supprimée.</p>
+          <h2 className="text-3xl font-extrabold text-red-600 dark:text-red-400 mb-3">Accès Refusé</h2>
+          <p className="text-lg font-semibold text-red-500 dark:text-red-400 mb-6">Vous n'avez pas accès à cette entreprise.</p>
           <Button onClick={() => navigate('/super-admin')} variant="primary" size="lg">
             <ArrowLeft className="w-5 h-5 mr-2" />
             Retour au Dashboard
